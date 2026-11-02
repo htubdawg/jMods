@@ -1,0 +1,83 @@
+
+name: Sync Mods
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-mods
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout jMods
+        uses: actions/checkout@v4
+
+      - name: Sync mod repositories
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          REPOS=(
+            HalfGripOpenWorld
+            HalfGripSlapPack
+            HalfGripStereo
+            HalfGripMiniMap
+            ProcTrack
+            HalfGripHelicopter
+          )
+
+          mkdir -p mods
+          rm -rf mods/*
+
+          for repo in "${REPOS[@]}"; do
+            echo "Syncing $repo..."
+
+            git clone --depth 1 --branch main \
+              "https://github.com/htubdawg/$repo.git" \
+              "/tmp/$repo"
+
+            while IFS= read -r -d '' manifest; do
+              source_dir="$(dirname "$manifest")"
+              mod_name="$(basename "$source_dir")"
+              destination="mods/$mod_name"
+
+              if [ -e "$destination" ]; then
+                echo "Duplicate mod folder: $mod_name"
+                exit 1
+              fi
+
+              mkdir -p "$destination"
+              cp -a "$source_dir/." "$destination/"
+              echo "Added $mod_name"
+            done < <(
+              find "/tmp/$repo" \
+                -path "/tmp/$repo/.git" -prune -o \
+                -name mod.json -type f -print0
+            )
+          done
+
+      - name: Commit and push changes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A mods
+
+          if git diff --cached --quiet; then
+            echo "No changes detected."
+            exit 0
+          fi
+
+          git commit -m "Sync mods from upstream repositories"
+          git push
