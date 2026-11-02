@@ -1,0 +1,10 @@
+{
+  "id": "minimap",
+  "name": "MiniMap",
+  "version": "1.2.4",
+  "author": "Claude - Oretsej",
+  "description": "A pixel-art map of the whole lap, turned with your car, with every racer on it: on a GPS you buy for the dash, and on the screen if you switch it on (K). Works on the game's maps and on modded ones, coloured to match the map; in the Open World mod it shows the country round your car.",
+  "icon": "icon.png",
+  "gameVersion": "0.418",
+  "tools": "1.0.2"
+}
