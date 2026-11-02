@@ -4,7 +4,7 @@ name: Sync Mods
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "17 */6 * * *"
 
 permissions:
   contents: write
@@ -21,8 +21,10 @@ jobs:
       - name: Checkout jMods
         uses: actions/checkout@v4
 
-      - name: Sync mod repositories
+      - name: Sync latest releases
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
 
@@ -39,11 +41,31 @@ jobs:
           rm -rf mods/*
 
           for repo in "${REPOS[@]}"; do
-            echo "Syncing $repo..."
+            echo "Checking $repo..."
 
-            git clone --depth 1 --branch main \
-              "https://github.com/htubdawg/$repo.git" \
-              "/tmp/$repo"
+            if ! tag=$(gh api \
+              "repos/htubdawg/$repo/releases/latest" \
+              --jq '.tag_name' 2>/dev/null); then
+              echo "No published release for $repo; skipping."
+              continue
+            fi
+
+            echo "Downloading $repo release $tag"
+
+            archive_url=$(gh api \
+              "repos/htubdawg/$repo/releases/latest" \
+              --jq '.zipball_url')
+
+            workdir=$(mktemp -d)
+            curl -fLsS \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "$archive_url" \
+              -o "$workdir/release.zip"
+
+            mkdir -p "$workdir/extracted"
+            unzip -q "$workdir/release.zip" \
+              -d "$workdir/extracted"
 
             while IFS= read -r -d '' manifest; do
               source_dir="$(dirname "$manifest")"
@@ -57,12 +79,13 @@ jobs:
 
               mkdir -p "$destination"
               cp -a "$source_dir/." "$destination/"
-              echo "Added $mod_name"
+              echo "Added $mod_name from $repo ($tag)"
             done < <(
-              find "/tmp/$repo" \
-                -path "/tmp/$repo/.git" -prune -o \
+              find "$workdir/extracted" \
                 -name mod.json -type f -print0
             )
+
+            rm -rf "$workdir"
           done
 
       - name: Commit and push changes
@@ -79,5 +102,5 @@ jobs:
             exit 0
           fi
 
-          git commit -m "Sync mods from upstream repositories"
+          git commit -m "Sync mods from latest releases"
           git push
