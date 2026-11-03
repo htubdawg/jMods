@@ -49,6 +49,7 @@ namespace HalfGripHelicopter
 				{
 					RefitForGps();
 				}
+				Remote.Tick(Active, flight, airframe);
 			}
 			catch (Exception e)
 			{
@@ -177,6 +178,7 @@ namespace HalfGripHelicopter
 		private void OnDestroy()
 		{
 			Remove();
+			Remote.Forget();
 		}
 	}
 }

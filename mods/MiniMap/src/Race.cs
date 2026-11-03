@@ -24,6 +24,7 @@ namespace HalfGripMiniMap
 		internal static float Heading;
 		internal static Vector3 Player;
 		internal static readonly List<KeyValuePair<Vector3, Marker>> Cars = new List<KeyValuePair<Vector3, Marker>>();
+		private static readonly HashSet<GameObject> seenCars = new HashSet<GameObject>();
 
 		private static int tickedFrame = -1;
 		private static float nextSearch;
@@ -54,6 +55,7 @@ namespace HalfGripMiniMap
 			Ready = false;
 			OpenWorld = false;
 			Cars.Clear();
+			seenCars.Clear();
 		}
 
 		/// <summary>Brings the race up to date, once per frame however many maps ask.</summary>
@@ -144,28 +146,42 @@ namespace HalfGripMiniMap
 			Player = car.position;
 
 			Cars.Clear();
+			seenCars.Clear();
+			GameObject self = Manager.lapManager != null ? Manager.lapManager.PlayerCar : null;
 			Dictionary<GameObject, LapManager.LeaderboardEntry> board = Manager.lapManager != null ? Manager.lapManager.leaderboard : null;
-			if (board != null && board.Count > 0)
+			if (board != null)
 			{
-				GameObject self = Manager.lapManager.PlayerCar;
 				foreach (GameObject other in board.Keys)
 				{
-					if (other != null && other != self && other.activeInHierarchy && other.transform != car && !car.IsChildOf(other.transform))
-					{
-						Cars.Add(new KeyValuePair<Vector3, Marker>(other.transform.position, other.GetComponent("RemoteCar") != null ? Marker.Remote : Marker.Bot));
-					}
+					AddCar(other, self, car);
 				}
 			}
-			else if (Manager.Enemies != null)
+			// Multiplayer adds a respawned stand-in to Enemies, but the game's nonempty leaderboard never registers the new car.
+			if (Manager.Enemies != null)
 			{
 				foreach (EnemyController enemy in Manager.Enemies)
 				{
-					if (enemy != null && enemy.gameObject.activeInHierarchy)
+					if (enemy != null)
 					{
-						Cars.Add(new KeyValuePair<Vector3, Marker>(enemy.transform.position, Marker.Bot));
+						AddCar(enemy.gameObject, self, car);
 					}
 				}
 			}
+		}
+
+		/// <summary>Both car lists may contain the same car, or an old wreck waiting to be destroyed.</summary>
+		private static void AddCar(GameObject other, GameObject self, Transform car)
+		{
+			if (other == null || other == self || !other.activeInHierarchy || other.transform == car || car.IsChildOf(other.transform))
+			{
+				return;
+			}
+			EnemyController enemy = other.GetComponent<EnemyController>();
+			if ((enemy != null && !enemy.alive) || !seenCars.Add(other))
+			{
+				return;
+			}
+			Cars.Add(new KeyValuePair<Vector3, Marker>(other.transform.position, other.GetComponent("RemoteCar") != null ? Marker.Remote : Marker.Bot));
 		}
 	}
 

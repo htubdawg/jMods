@@ -8,12 +8,14 @@ namespace HalfGripHelicopter
 	/// The Helicopter chassis item: a copy of one of the game's chassis items with stock numbers (no downforce, which would hold the
 	/// helicopter down) and a drawn icon. It has no interior or exterior prefab: <see cref="HeliDriver"/> builds the cockpit and the rotor
 	/// itself when it sees the item fitted, because the cockpit has to take the place of parts that are in the scene, not on a mount.
+	/// <para>Where it is offered: the game's shop, race rewards and unlocks skip items with <c>disabled</c> set, so the item is
+	/// <c>disabled</c> unless <c>Shop.InRuns</c> is on; the Open World's and the Multiplayer mod's garages, which skip them too, are
+	/// told to offer it anyway (<see cref="Lock"/>, <c>OfferIn</c>).</para>
 	/// </summary>
 	internal static class HeliItem
 	{
 		/// <summary>Saved in runs and loadouts: never change it.</summary>
 		internal const string Id = "helicopter.heli";
-		private const int Cost = 150;
 
 		internal static UpgradeComponent Item;
 
@@ -25,6 +27,20 @@ namespace HalfGripHelicopter
 				return Item;
 			});
 			ctx.OnUnload(() => Item = null);
+			Mod.Price.SettingChanged += (_, _) =>
+			{
+				if (Item != null)
+				{
+					Item.cost = Mod.Price.Value;
+				}
+			};
+			Mod.InRuns.SettingChanged += (_, _) =>
+			{
+				if (Item != null)
+				{
+					Item.disabled = !Mod.InRuns.Value;
+				}
+			};
 		}
 
 		/// <summary>True for the Helicopter item (by id, so a copy the game made of it counts too).</summary>
@@ -84,9 +100,9 @@ namespace HalfGripHelicopter
 			made.description = "Helicopter\n<color=#7e7e7e>The roads are optional</color>";
 			made.interaction = "Fits with guns and the GPS only: everything else comes off. Throttle up, raise the collective past half, fly with the stick (right click locks it)";
 			made.secondaryDescription = "Takes the wheel and the shifter out. In the Open World, land in a garage, drop the collective to the bottom and let go to open it.";
-			made.cost = Cost;
+			made.cost = Mod.Price.Value;
 			made.tier = ItemTier.RaceSpec;
-			made.disabled = false;
+			made.disabled = !Mod.InRuns.Value;
 			made.startsLocked = false;
 			made.upgradeCategory = UpgradeCategory.CHASSIS;
 			made.mountSlot = MountSlot.None;

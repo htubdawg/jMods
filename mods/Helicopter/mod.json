@@ -1,7 +1,7 @@
 {
   "id": "helicopter",
   "name": "Helicopter",
-  "version": "0.2.4",
+  "version": "0.2.6",
   "author": "Claude - Oretsej",
   "description": "A chassis item that turns the car into a helicopter: a throttle, a collective and a stick in place of the wheel and shifter. Only guns and the MiniMap GPS fit with it. Made for the Open World mod.",
   "gameVersion": "0.418",
