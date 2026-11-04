@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <HalfGripRefsDir Condition="'$(HalfGripRefsDir)' == ''">$(MSBuildThisFileDirectory)../../HalfGripRefs</HalfGripRefsDir>
+    <ManagedDir>$(HalfGripRefsDir)/game/HalfGrip_Data/Managed</ManagedDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="$(ManagedDir)/*.dll" Exclude="$(ManagedDir)/mscorlib.dll;$(ManagedDir)/netstandard.dll;$(ManagedDir)/System*.dll" />
+    <Reference Include="$(HalfGripRefsDir)/game/BepInEx/core/BepInEx.dll" />
+    <Reference Include="$(HalfGripRefsDir)/game/BepInEx/core/0Harmony.dll" />
+    <Reference Include="HalfGripTools"><HintPath>$(HalfGripToolsDll)</HintPath></Reference>
+  </ItemGroup>
+  <Target Name="CheckReferences" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(HalfGripToolsDll)')" Text="Pass -p:HalfGripToolsDll=/absolute/path/to/HalfGripTools.dll (version 1.0.6 or newer)." />
+    <Error Condition="!Exists('$(ManagedDir)/Assembly-CSharp.dll')" Text="Set HalfGripRefsDir to the HalfGripRefs checkout." />
+  </Target>
+</Project>

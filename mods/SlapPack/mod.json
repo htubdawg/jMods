@@ -1,0 +1,9 @@
+{
+  "id": "slappack",
+  "name": "Slap Pack",
+  "version": "0.8.3",
+  "author": "htubdawg",
+  "description": "Adjustable mirror, working window cranks, turn signals, and manual three-speed windshield wipers that clear rain and slush from vanilla and Open World weather.",
+  "gameVersion": "0.418",
+  "tools": "1.0.6"
+}
