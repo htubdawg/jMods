@@ -1,6 +1,6 @@
 # jMods
 
-A collection of mods for [Half Grip](https://store.steampowered.com/app/4163270/), adding an open world, procedural race tracks, cockpit equipment, and new ways to play.
+A collection of mods for [Half Grip](https://store.steampowered.com/app/4163270/), adding an open world, procedural race tracks, cockpit equipment, working car controls and windshield weather, and new ways to play.
 
 Each mod is maintained in its own repository. This collection automatically pulls the latest published releases into one place for easy installation.
 
@@ -53,9 +53,15 @@ An interactive CD player mounted in the cockpit, with a CD wallet on the sun vis
 
 ### [SlapPack](https://github.com/htubdawg/HalfGripSlapPack)
 
-A collection of new objects to interact with inside your car.
+More things to grab in your car: an adjustable rear-view mirror, working window cranks, a turn-signal stalk, and three-speed windshield wipers with a washer. Rain and slush build up on the glass and distort the view until you wipe them away. Works with the base game's weather and with Open World's variable rain, snow, and wind.
 
-*In development.*
+| Control | How to use it |
+|---|---|
+| **Rear-view mirror** | Grab and drag to aim; right-click to reset. The position is saved between races |
+| **Window cranks** | Grab a door's crank and circle your hand: clockwise lowers the window, counterclockwise raises it |
+| **Turn-signal stalk** (left) | Down for left, up for right. A half tap flashes three times; full travel latches |
+| **Wiper sleeve** (right) | Hold right-click and drag through **0 / I / II / III**: off, intermittent, continuous, fast |
+| **Washer stalk** (right) | Pull down to spray and wipe |
 
 ## Updates
 
