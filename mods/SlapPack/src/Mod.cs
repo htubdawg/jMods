@@ -16,7 +16,9 @@ namespace HalfGripSlapPack
             Object.DontDestroyOnLoad(host);
             host.AddComponent<MirrorInstaller>().Initialize(ctx);
             host.AddComponent<WindowDiagnostics>().Initialize(ctx);
-            host.AddComponent<WindowInstaller>().Initialize(ctx);
+            var windows = host.AddComponent<WindowInstaller>();
+            windows.Initialize(ctx);
+            host.AddComponent<WindowWeatherInstaller>().Initialize(ctx, windows);
             host.AddComponent<TurnSignalInstaller>().Initialize(ctx);
             host.AddComponent<WiperInstaller>().Initialize(ctx);
         }
@@ -26,6 +28,7 @@ namespace HalfGripSlapPack
             if (!host) return;
             host.GetComponent<MirrorInstaller>().RemoveMirror();
             host.GetComponent<WindowInstaller>().RemoveWindows();
+            host.GetComponent<WindowWeatherInstaller>().RemoveWeather();
             host.GetComponent<TurnSignalInstaller>().RemoveSignals();
             host.GetComponent<WiperInstaller>().RemoveWipers();
             Object.Destroy(host);

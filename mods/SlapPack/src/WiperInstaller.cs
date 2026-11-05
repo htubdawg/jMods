@@ -38,7 +38,7 @@ namespace HalfGripSlapPack
 				new ConfigDescription("Seconds parked between normal-speed wipes in the first dial position. Restart after changing.", new AcceptableValueRange<float>(0.5f, 10f)));
 			stalkLength = ctx.Config.Bind("Wipers", "StalkLength", 3.5f,
 				new ConfigDescription("Right-hand stalk length in cockpit units. Shorter than the signal stalk; automatically limited for shifter clearance. Restart after changing.", new AcceptableValueRange<float>(2.6f, 4f)));
-			stalkUpAngle = ctx.Config.Bind("Wipers", "StalkUpAngle", 18f,
+			stalkUpAngle = ctx.Config.Bind("Wipers", "StalkUpAngle", 24f,
 				new ConfigDescription("Upward neutral angle of the right-hand wiper stalk. Restart after changing.", new AcceptableValueRange<float>(0, 30)));
 			ctx.OnSceneLoaded(scene => { RemoveWipers(); nextScan = Time.unscaledTime + 0.5f; });
 		}

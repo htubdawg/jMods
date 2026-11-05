@@ -39,7 +39,13 @@ namespace HalfGripSlapPack
             if (opening.Count < 3 || fraction >= 1) return new List<PanePoint>();
             float height = opening.Max(p => p.Y) - opening.Min(p => p.Y);
             var result = opening.Select(p => new PanePoint(p.X, p.Y - Math.Max(0, fraction) * height)).ToList();
-            // Intersect the descending pane with the fixed opening, keeping it out of the door frame.
+            return Clip(result, opening);
+        }
+
+        /// <summary>Clips a polygon against a convex, counterclockwise window aperture.</summary>
+        internal static List<PanePoint> Clip(List<PanePoint> result, IReadOnlyList<PanePoint> opening)
+        {
+            // Keep each original glass triangle within the fixed door frame.
             for (int i = 0; i < opening.Count && result.Count > 0; i++)
             {
                 PanePoint a = opening[i], b = opening[(i + 1) % opening.Count];

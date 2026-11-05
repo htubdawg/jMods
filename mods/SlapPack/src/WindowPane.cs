@@ -6,6 +6,9 @@ namespace HalfGripSlapPack
 {
     internal sealed class WindowPane
     {
+        internal readonly MeshFilter Source;
+        internal readonly HashSet<int> Indices;
+        internal float OpenFraction { get; private set; }
         private readonly Mesh mesh;
         private readonly List<PanePoint> opening;
         private readonly Vector3 origin, right, up;
@@ -14,6 +17,7 @@ namespace HalfGripSlapPack
         {
             MeshSnapshot snapshot = MeshSnapshot.Read(source.sharedMesh);
             int[] triangles = indices.ToArray();
+            Source = source; Indices = new HashSet<int>(triangles);
             Vector3[] all = snapshot.Vertices.Select(p => car.InverseTransformPoint(source.transform.TransformPoint(p))).ToArray();
             Vector3[] points = triangles.Distinct().Select(i => all[i]).ToArray();
             Vector3 center = points.Aggregate(Vector3.zero, (a, b) => a + b) / points.Length;
@@ -43,6 +47,7 @@ namespace HalfGripSlapPack
 
         internal void SetOpen(float fraction)
         {
+            OpenFraction = fraction;
             List<PanePoint> polygon = WindowPolygon.Lower(opening, fraction);
             mesh.Clear();
             if (polygon.Count < 3) return;

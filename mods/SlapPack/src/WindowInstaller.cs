@@ -19,6 +19,7 @@ namespace HalfGripSlapPack
         private Transform boundModel;
         private CameraSwitch boundCameras;
         private readonly List<Object> owned = new List<Object>();
+        private readonly List<WindowPane> panes = new List<WindowPane>();
         private readonly List<WindowCrank> cranks = new List<WindowCrank>();
         private readonly List<Tuple<MeshRenderer, Material, Material>> replacements = new List<Tuple<MeshRenderer, Material, Material>>();
 
@@ -132,7 +133,9 @@ namespace HalfGripSlapPack
                 }
             }
             if (!chosen) throw new InvalidOperationException("Matching front door glass was not found; windshield will not be modified.");
-            return new WindowPane(chosen, car, chosenIndices, material, owned);
+            var pane = new WindowPane(chosen, car, chosenIndices, material, owned);
+            panes.Add(pane);
+            return pane;
         }
 
         private static IEnumerable<List<int>> Groups(MeshSnapshot mesh)
@@ -155,11 +158,16 @@ namespace HalfGripSlapPack
             }
         }
 
+        /// <summary>Matches weather faces to the crank-controlled glass without changing shared meshes.</summary>
+        internal WindowPane MovingPane(MeshRenderer source, IEnumerable<int> indices) =>
+            panes.FirstOrDefault(p => p.Source && p.Source.gameObject == source.gameObject && indices.Any(p.Indices.Contains));
+
         internal void RemoveWindows()
         {
             WindowCrankIndicators.RestoreAll();
             foreach (WindowCrank crank in cranks) if (crank) crank.gameObject.SetActive(false);
             cranks.Clear();
+            panes.Clear();
             foreach (var replacement in replacements)
             {
                 if (!replacement.Item1) continue;
