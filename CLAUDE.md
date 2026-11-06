@@ -38,8 +38,8 @@ make sure this README's section for the mod matches what the release does.
 
 | Mod | Released (in `mods/`) | Status |
 |---|---|---|
-| MiniMap | 1.2.5, game 0.418, tools 1.0.2 | **Done, waiting on the owner**: fixes merged in [htubdawg/HalfGripMiniMap#21](https://github.com/htubdawg/HalfGripMiniMap/pull/21); game 0.419 and tools 1.0.6 in [htubdawg/HalfGripMiniMap#22](https://github.com/htubdawg/HalfGripMiniMap/pull/22). Next: owner merges #22 and publishes v1.2.6. |
-| OpenWorld | 0.26.0, game 0.418, tools 1.0.6 | **Done, waiting on the owner**: game 0.419, version 0.26.1, a weather fix in [htubdawg/HalfGripOpenWorld#40](https://github.com/htubdawg/HalfGripOpenWorld/pull/40); README section updated (events, storms). Next: owner merges #40 and publishes v0.26.1. |
+| MiniMap | 1.2.5, game 0.418, tools 1.0.2 | **Done**: fixes in [htubdawg/HalfGripMiniMap#21](https://github.com/htubdawg/HalfGripMiniMap/pull/21), game 0.419 and tools 1.0.6 in [htubdawg/HalfGripMiniMap#22](https://github.com/htubdawg/HalfGripMiniMap/pull/22); both merged and v1.2.6 published (the sync brings it here). |
+| OpenWorld | 0.26.0, game 0.418, tools 1.0.6 | **Done, waiting on the owner**: [htubdawg/HalfGripOpenWorld#40](https://github.com/htubdawg/HalfGripOpenWorld/pull/40) (0.26.1: game 0.419, memory freed after each race, world size stated right: about 9.7 km across, not 32 km, weather fix). README section updated in this PR. Next: owner merges #40 and publishes v0.26.1. |
 | ProcTrack | 1.0.28, game 0.418, no `tools` | Not started. Game version is behind; `tools` missing. |
 | Helicopter | 0.2.6, game 0.418, tools 1.0.2 | Not started. Both versions are behind. |
 | Stereo | 0.2.3, game 0.418, tools 1.0.2 | Not started. Both versions are behind. |
