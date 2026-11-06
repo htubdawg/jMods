@@ -39,7 +39,7 @@ make sure this README's section for the mod matches what the release does.
 | Mod | Released (in `mods/`) | Status |
 |---|---|---|
 | MiniMap | 1.2.5, game 0.418, tools 1.0.2 | **Done, waiting on the owner**: fixes merged in [htubdawg/HalfGripMiniMap#21](https://github.com/htubdawg/HalfGripMiniMap/pull/21); game 0.419 and tools 1.0.6 in [htubdawg/HalfGripMiniMap#22](https://github.com/htubdawg/HalfGripMiniMap/pull/22). Next: owner merges #22 and publishes v1.2.6. |
-| OpenWorld | 0.26.0, game 0.418, tools 1.0.6 | Not started. Game version is behind. |
+| OpenWorld | 0.26.0, game 0.418, tools 1.0.6 | **Done, waiting on the owner**: game 0.419, version 0.26.1, a weather fix in [htubdawg/HalfGripOpenWorld#40](https://github.com/htubdawg/HalfGripOpenWorld/pull/40); README section updated (events, storms). Next: owner merges #40 and publishes v0.26.1. |
 | ProcTrack | 1.0.28, game 0.418, no `tools` | Not started. Game version is behind; `tools` missing. |
 | Helicopter | 0.2.6, game 0.418, tools 1.0.2 | Not started. Both versions are behind. |
 | Stereo | 0.2.3, game 0.418, tools 1.0.2 | Not started. Both versions are behind. |
@@ -55,6 +55,11 @@ README section with the audit's PR instead.
 
 - Deleting a remote branch (`git push --delete`) is refused by the session's git proxy (HTTP 403); a force push is refused by the
   permission check. Use a new branch name instead of rewriting an old one, and ask the owner to delete branches on GitHub.
+- `add_repo` with push access was refused by the auto-mode permission check until the owner allowed it; a public repo can still be
+  cloned read-only, but not pushed to.
 - Building HalfGripTools from source was refused by the permission check, so `tools/check.sh`-style full compiles could not run.
   A partial compile works: every file of the mod except those that `using HalfGripTools`, plus a small stand-in for the members
-  they provide, against `HalfGripRefs/game` (see HalfGripMiniMap#21's checks).
+  they provide, against `HalfGripRefs/game` (see HalfGripMiniMap#21's checks). Better: a stand-in `HalfGripTools` namespace with the
+  members the mod calls (signatures copied from HalfGripTools' source), so every file compiles (done for HalfGripOpenWorld#40).
+  A small `System.Reflection.Metadata` scan of `Assembly-CSharp.dll` checks the members a mod names by string (Harmony targets,
+  `Traverse`, `AccessTools`), which a compile does not.
