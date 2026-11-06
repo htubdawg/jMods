@@ -26,6 +26,8 @@ version) and `4l3x4nd3r0/HalfGripTools` (the mod loader, public; current version
    `tools` to the current HalfGripTools release (see above); keep the mod README's header line and install steps in step.
 3. Run the repo's own checks (its CLAUDE.md lists them) and say plainly which ones ran and which could not.
 4. Update the repo's CLAUDE.md Status, push to a branch and **open the PR yourself**. Do not stop at "want me to open a PR?".
+   Before pushing more to a branch that already has a PR, check the PR is still open: the owner merges quickly, and commits
+   pushed to a merged PR's branch never reach `main` (that happened with HalfGripMiniMap#21). Start a new branch from `main` instead.
 5. Reaching jMods: the owner merges the PR and publishes a release; the sync then brings it here. Do not wait for that or edit
    `mods/` to make it show up sooner.
 
@@ -36,7 +38,7 @@ make sure this README's section for the mod matches what the release does.
 
 | Mod | Released (in `mods/`) | Status |
 |---|---|---|
-| MiniMap | 1.2.5, game 0.418, tools 1.0.2 | **Done**: [htubdawg/HalfGripMiniMap#21](https://github.com/htubdawg/HalfGripMiniMap/pull/21) (1.2.6: four fixes, game 0.419, tools 1.0.6) waits on the owner's review, merge and release. |
+| MiniMap | 1.2.5, game 0.418, tools 1.0.2 | **Done, waiting on the owner**: fixes merged in [htubdawg/HalfGripMiniMap#21](https://github.com/htubdawg/HalfGripMiniMap/pull/21); game 0.419 and tools 1.0.6 in [htubdawg/HalfGripMiniMap#22](https://github.com/htubdawg/HalfGripMiniMap/pull/22). Next: owner merges #22 and publishes v1.2.6. |
 | OpenWorld | 0.26.0, game 0.418, tools 1.0.6 | Not started. Game version is behind. |
 | ProcTrack | 1.0.28, game 0.418, no `tools` | Not started. Game version is behind; `tools` missing. |
 | Helicopter | 0.2.6, game 0.418, tools 1.0.2 | Not started. Both versions are behind. |
