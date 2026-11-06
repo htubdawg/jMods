@@ -23,7 +23,7 @@ The first launch may take a little longer while the mods compile. To check for u
 
 ### [Open World](https://github.com/htubdawg/HalfGripOpenWorld)
 
-A 32 × 32 km open world with towns, villages, mountains, rivers, highways, and country roads. Includes garages, race events, a day/night cycle, and multiplayer support.
+An open world about 9.7 km (6 miles) square, with towns, villages, mountains, rivers, highways, and country roads. Includes garages, timed race events (a circuit, a rally stage, a hill climb, and the highway), a day/night cycle, storms that drift across the country, and multiplayer support.
 
 ![Open World map](https://raw.githubusercontent.com/htubdawg/HalfGripOpenWorld/main/docs/world-labels.png)
 
