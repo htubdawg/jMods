@@ -37,6 +37,7 @@ namespace HalfGripSlapPack
         private void Update()
         {
             if (context == null) return;
+			if (!ChassisCompatibility.AllowsAdditions) { RemoveWindows(); attemptedModel = 0; return; }
             if (!enableWindows.Value) { RemoveWindows(); attemptedModel = 0; return; }
             if (boundModel && boundCameras && boundCameras.interiorModels != null &&
                 !boundCameras.interiorModels.Any(m => m && m != boundModel && m.gameObject.activeInHierarchy))

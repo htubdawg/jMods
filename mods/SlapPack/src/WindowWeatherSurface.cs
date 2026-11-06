@@ -40,7 +40,7 @@ namespace HalfGripSlapPack
 			texture = new Texture2D(WindowWeatherState.Width, WindowWeatherState.Height, TextureFormat.RGBA32, false)
 				{ name = "SlapPack side/rear precipitation", filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
 			owned.Add(texture); texture.SetPixels32(pixels); texture.Apply(false, false);
-			Material material = WindowMaterials.Transparent(Color.white, texture, owned); material.renderQueue = 3001;
+			Material material = WindowMaterials.Precipitation(Color.white, texture, owned);
 			var go = new GameObject(rear ? "SlapPack.RearWeather" : "SlapPack.SideWeather"); owned.Add(go);
 			// Follow the source's hierarchy for body activation and destruction, while
 			// converting car-space geometry into its unmodified local coordinates.

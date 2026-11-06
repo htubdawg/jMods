@@ -11,6 +11,7 @@ namespace HalfGripSlapPack
         public override void Load(ModContext ctx)
         {
             ModLog.Initialize(ctx.Config, ctx.Log);
+            ChassisCompatibility.Initialize(message => ctx.Log.LogWarning(message));
             ctx.PatchAll();
             host = new GameObject("SlapPack.Mirrors");
             Object.DontDestroyOnLoad(host);
@@ -18,14 +19,18 @@ namespace HalfGripSlapPack
             host.AddComponent<WindowDiagnostics>().Initialize(ctx);
             var windows = host.AddComponent<WindowInstaller>();
             windows.Initialize(ctx);
-            host.AddComponent<WindowWeatherInstaller>().Initialize(ctx, windows);
+            var windowWeather = host.AddComponent<WindowWeatherInstaller>();
+            windowWeather.Initialize(ctx, windows);
             host.AddComponent<TurnSignalInstaller>().Initialize(ctx);
-            host.AddComponent<WiperInstaller>().Initialize(ctx);
+            var wipers = host.AddComponent<WiperInstaller>();
+            wipers.Initialize(ctx);
+            host.AddComponent<HeldGunWeatherOcclusion>().Initialize(ctx, wipers, windowWeather);
         }
 
         public override void Unload()
         {
             if (!host) return;
+            host.GetComponent<HeldGunWeatherOcclusion>().Stop();
             host.GetComponent<MirrorInstaller>().RemoveMirror();
             host.GetComponent<WindowInstaller>().RemoveWindows();
             host.GetComponent<WindowWeatherInstaller>().RemoveWeather();

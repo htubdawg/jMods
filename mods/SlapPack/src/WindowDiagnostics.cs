@@ -31,6 +31,7 @@ namespace HalfGripSlapPack
         private void Update()
         {
             if (context == null || !enabledReport.Value || Time.unscaledTime < nextScan) return;
+			if (!ChassisCompatibility.AllowsAdditions) return;
             nextScan = Time.unscaledTime + 1f;
             foreach (CarControllerNew car in Object.FindObjectsByType<CarControllerNew>(FindObjectsSortMode.None))
             {

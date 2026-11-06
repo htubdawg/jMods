@@ -24,6 +24,7 @@ namespace HalfGripSlapPack
         private void Update()
         {
             if (context == null) return;
+			if (!ChassisCompatibility.AllowsAdditions) { RemoveMirror(); return; }
             if (mirror && !mirror.IsBound) RemoveMirror();
             if (mirror)
             {

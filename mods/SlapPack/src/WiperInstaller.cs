@@ -25,6 +25,7 @@ namespace HalfGripSlapPack
 		private readonly List<Object> owned = new List<Object>(), bladeOwned = new List<Object>();
 		private float nextScan;
 		private int glassSignature;
+		internal bool HasWeather(CarControllerNew target) => car == target && weather != null;
 
 		internal void Initialize(ModContext ctx)
 		{
@@ -46,6 +47,7 @@ namespace HalfGripSlapPack
 		private void Update()
 		{
 			if (context == null) return;
+			if (!ChassisCompatibility.AllowsAdditions) { RemoveWipers(); return; }
 			if (!enableWipers.Value) { RemoveWipers(); return; }
 			if (car && link && stalk && cameras && link.sw && link.sw.wheel)
 			{
@@ -136,6 +138,7 @@ namespace HalfGripSlapPack
 
 		private void LateUpdate()
 		{
+			if (!ChassisCompatibility.AllowsAdditions) { RemoveWipers(); return; }
 			if (!car || state == null) return;
 			if (Time.timeScale <= 0) return;
 			if (weather == null) state.Tick(Time.deltaTime);

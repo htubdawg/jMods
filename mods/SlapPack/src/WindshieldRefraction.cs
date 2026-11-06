@@ -120,6 +120,7 @@ namespace HalfGripSlapPack
 		/// <summary>Queues the pass only for the player's current, visibly wet cockpit view.</summary>
 		private void BeginCamera(ScriptableRenderContext context, Camera camera)
 		{
+			if (!ChassisCompatibility.AllowsAdditions) return;
 			if (!car || camera != car.fpvCamera || !camera.isActiveAndEnabled || !glass.Source || !glass.Source.gameObject.activeInHierarchy) return;
 			callbacks++;
 			if (failed) return;

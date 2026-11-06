@@ -8,6 +8,16 @@ namespace HalfGripSlapPack
 {
     internal static class WindowMaterials
     {
+		/// <summary>Draws glass deposits before transparent guns/hands, retaining opaque depth occlusion.</summary>
+		internal static Material Precipitation(Color color, Texture texture, List<Object> owned)
+		{
+			Material material = Transparent(color, texture, owned);
+			// Transparent gun materials need not write depth. A later queue would
+			// paint deposits over them regardless of their distance from the glass.
+			material.renderQueue = (int)RenderQueue.Transparent - 1;
+			return material;
+		}
+
         internal static Material Transparent(Color color, Texture texture, List<Object> owned)
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Universal Render Pipeline/Lit");

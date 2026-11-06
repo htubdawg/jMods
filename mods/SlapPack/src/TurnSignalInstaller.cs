@@ -50,6 +50,7 @@ namespace HalfGripSlapPack
         private void Update()
         {
             if (context == null) return;
+			if (!ChassisCompatibility.AllowsAdditions) { RemoveSignals(); return; }
             if (!enabledSignals.Value) { RemoveSignals(); return; }
             if (car && link && wheel && stalk && link.sw && link.sw.wheel == wheel)
             {
@@ -156,6 +157,7 @@ namespace HalfGripSlapPack
 
         private void LateUpdate()
         {
+			if (!ChassisCompatibility.AllowsAdditions) { RemoveSignals(); return; }
             if (!car || signal == null) return;
             Vector3 forward = Vector3.ProjectOnPlane(car.transform.forward, Vector3.up).normalized;
             float delta = Vector3.SignedAngle(previousForward, forward, Vector3.up);

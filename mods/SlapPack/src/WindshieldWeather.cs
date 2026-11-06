@@ -30,9 +30,8 @@ namespace HalfGripSlapPack
 				{ name = "SlapPack windshield water/slush", filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
 			owned.Add(texture);
 			texture.SetPixels32(pixels); texture.Apply(false, false);
-			Material material = WindowMaterials.Transparent(Color.white, texture, owned);
+			Material material = WindowMaterials.Precipitation(Color.white, texture, owned);
 			material.name = "SlapPack windshield precipitation";
-			material.renderQueue = 3001;
 			var go = new GameObject("SlapPack.WindshieldWeather"); owned.Add(go);
 			go.layer = glass.Source.gameObject.layer; go.transform.SetParent(car.transform, false);
 			Mesh mesh = glass.WeatherMesh(field); owned.Add(mesh);
