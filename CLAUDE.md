@@ -24,6 +24,8 @@ version) and `4l3x4nd3r0/HalfGripTools` (the mod loader, public; current version
    read its own CLAUDE.md first: each one has its own rules, checks and a Status section.
 2. **Every change that will be released:** bump the mod's `version` in `mod.json`; set `gameVersion` to the current game and
    `tools` to the current HalfGripTools release (see above); keep the mod README's header line and install steps in step.
+   Every mod ships an icon for the HalfGripTools mod manager: `icon.png` (128×128 pixel art drawn at 64×64 and doubled, like the
+   others) in the mod's folder and `"icon": "icon.png"` in `mod.json`. Check this in every audit.
 3. Run the repo's own checks (its CLAUDE.md lists them) and say plainly which ones ran and which could not.
 4. Update the repo's CLAUDE.md Status, push to a branch and **open the PR yourself**. Do not stop at "want me to open a PR?".
    Before pushing more to a branch that already has a PR, check the PR is still open: the owner merges quickly, and commits
@@ -41,11 +43,11 @@ starting** (`git ls-remote --tags https://github.com/htubdawg/<repo>`; the tag's
 | Mod | Newest release | Status |
 |---|---|---|
 | MiniMap | v1.2.6, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripMiniMap#21, #22). |
-| OpenWorld | v0.26.1, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripOpenWorld#40). |
+| OpenWorld | v0.26.1, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripOpenWorld#40). The release has no icon: added in htubdawg/HalfGripOpenWorld#41 (no version bump). |
 | ProcTrack | v1.0.29, game 0.419, tools 1.0.6 | **Done**. |
 | Helicopter | v0.2.7, game 0.419, tools 1.0.6 | **Done**. |
 | Stereo | v0.2.4, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripStereo#4). |
-| SlapPack | v0.8.13, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripSlapPack#6, #7). |
+| SlapPack | v0.8.13, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripSlapPack#6, #7). The release has no icon: added in htubdawg/HalfGripSlapPack#8 (no version bump). |
 
 Every mod has been audited once. Current versions when this was written: game **0.419** (HalfGripRefs), HalfGripTools **1.0.6**.
 Check both again before using them. When either changes, or a mod gets a new release, check that mod again the same way and
