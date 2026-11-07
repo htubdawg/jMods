@@ -45,13 +45,15 @@ starting** (`git ls-remote --tags https://github.com/htubdawg/<repo>`; the tag's
 | ProcTrack | v1.0.29, game 0.419, tools 1.0.6 | **Done**. |
 | Helicopter | v0.2.7, game 0.419, tools 1.0.6 | **Done**. |
 | Stereo | v0.2.4, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripStereo#4). |
-| SlapPack | v0.8.12, game 0.418, tools 1.0.6 | **PR open**: htubdawg/HalfGripSlapPack#7 (0.8.13, game 0.419; tutorial fix, config comments, README). It contains #6, so merging #7 completes both. Then release v0.8.13. |
+| SlapPack | v0.8.13, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripSlapPack#6, #7). |
 
-Current versions when this was written: game **0.419** (HalfGripRefs), HalfGripTools **1.0.6**. Check both again before using them.
+Every mod has been audited once. Current versions when this was written: game **0.419** (HalfGripRefs), HalfGripTools **1.0.6**.
+Check both again before using them. When either changes, or a mod gets a new release, check that mod again the same way and
+add a row note here.
 
-**README:** the MiniMap section here has not been changed yet. A rewrite (shop GPS, controls table, Open World view) was made on
-branch `claude/blissful-mayer-0t7ba2`, but the owner did not want that branch: it should be deleted, not merged. Rewrite the
-README section with the audit's PR instead.
+**README:** every mod's section here matches its newest release (MiniMap's was rewritten with the SlapPack audit's jMods PR).
+Old branches the owner should delete on GitHub: `claude/blissful-mayer-0t7ba2` (an unwanted MiniMap README rewrite) and, in
+HalfGripSlapPack, `claude/blissful-albattani-b0ecpx` (merged through #7).
 
 ## Session limits seen so far
 
@@ -59,11 +61,12 @@ README section with the audit's PR instead.
   permission check. Use a new branch name instead of rewriting an old one, and ask the owner to delete branches on GitHub.
 - `add_repo` with push access was refused by the auto-mode permission check until the owner allowed it; a public repo can still be
   cloned read-only, but not pushed to.
-- Building HalfGripTools from source worked in the Stereo audit session (full `tools/check.sh` ran); it was refused by the permission check before that and again in the SlapPack audit session, so `tools/check.sh`-style full compiles could not always run.
-- Decompiling the game works: `dotnet tool install ilspycmd --tool-path <scratch>/ilspy --version 8.2.0.7535`, then run it with
-  `DOTNET_ROLL_FORWARD=Major` (only .NET 8 is installed) and `-p -o <dir> Assembly-CSharp.dll` to check how game code behaves.
+- Building HalfGripTools from source worked in the Stereo audit session (full `tools/check.sh` ran); it was refused by the
+  permission check before that and again in the SlapPack audit session, so `tools/check.sh`-style full compiles cannot be relied on.
   A partial compile works: every file of the mod except those that `using HalfGripTools`, plus a small stand-in for the members
   they provide, against `HalfGripRefs/game` (see HalfGripMiniMap#21's checks). Better: a stand-in `HalfGripTools` namespace with the
   members the mod calls (signatures copied from HalfGripTools' source), so every file compiles (done for HalfGripOpenWorld#40).
   A small `System.Reflection.Metadata` scan of `Assembly-CSharp.dll` checks the members a mod names by string (Harmony targets,
   `Traverse`, `AccessTools`), which a compile does not.
+- Decompiling the game works: `dotnet tool install ilspycmd --tool-path <scratch>/ilspy --version 8.2.0.7535`, then run it with
+  `DOTNET_ROLL_FORWARD=Major` (only .NET 8 is installed) and `-p -o <dir> Assembly-CSharp.dll` to check how game code behaves.

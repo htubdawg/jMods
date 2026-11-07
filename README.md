@@ -35,7 +35,12 @@ Five procedural race maps built from a new seed each race. Stadium, Forest, Moun
 
 ### [MiniMap](https://github.com/htubdawg/HalfGripMiniMap)
 
-A dashboard GPS and optional on-screen minimap showing the track, your position, and other racers. Supports the base game, procedural maps, and Open World.
+A pixel-art map of the whole lap that turns with your car and shows every racer: you as a white arrow, bots as red dots, other players as blue dots. Buy the **GPS** in the shop ($25, one dash module slot), or switch on the **screen minimap** in the config. Works on the base game's maps, ProcTrack's procedural maps, and other modded maps, coloured to match the map and weather. In Open World free roam it shows the country round your car instead: roads by class, rivers, towns, and a north marker.
+
+| Control | How to use it |
+|---|---|
+| **GPS screen** | Left-click to tap it; right-click to zoom (middle, out, in) |
+| **Screen minimap** | Off by default: set `Display.Enabled = true` in the config. **K** hides or shows it |
 
 ![MiniMap preview](https://raw.githubusercontent.com/htubdawg/HalfGripMiniMap/main/docs/preview.png)
 
