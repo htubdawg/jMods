@@ -23,11 +23,16 @@ namespace HalfGripSlapPack
 		}
 
 		/// <summary>Checks every equipped chassis, including custom items which reuse stock cabin objects or skins.</summary>
+		/// <remarks>
+		/// An unknown loadout (the tutorial, or any scene loaded without the race menu setting a loadout) is
+		/// the stock car: the game then fits no chassis item (<c>LoadoutSpawner</c>, <c>CarSkinController</c>), so additions are allowed.
+		/// </remarks>
 		internal static bool AllowsAdditions
 		{
 			get
 			{
-				if (stock == null || !stock.Ready || !PlayerLoadout.Known) return false;
+				if (stock == null || !stock.Ready) return false;
+				if (!PlayerLoadout.Known) return true;
 				foreach (UpgradeComponent item in PlayerLoadout.Equipped)
 					if (item && (item is ChassisUpgrade || item.upgradeCategory == UpgradeCategory.CHASSIS) && !stock.Includes(item.id))
 						return false;

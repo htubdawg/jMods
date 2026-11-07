@@ -70,7 +70,7 @@ namespace HalfGripMiniMap
 			if (Ready)
 			{
 				Gather();
-				if (OpenWorld)
+				if (OpenWorld && OpenWorldLink.Active)
 				{
 					// Corners of the square GPS reach half as far again as its sides, and a pixel's looks a little past them. The GPS
 					// zoomed out shows more.
@@ -108,6 +108,14 @@ namespace HalfGripMiniMap
 				}
 				return true;
 			}
+			if (OpenWorld)
+			{
+				// The Open World stopped answering (or its race ended without a scene load): back to the lap, coloured afresh.
+				OpenWorld = false;
+				Palette = null;
+				drawn = null;
+				Version++;
+			}
 			PathManager line = Manager.lapManager != null ? Manager.lapManager.trackLine : null;
 			if (line == null || line.sampledPoints == null || line.sampledPoints.Count < 8)
 			{
@@ -118,9 +126,10 @@ namespace HalfGripMiniMap
 				nextCheck = Time.unscaledTime + 0.5f;
 				WeatherProfile weather = WeatherGrip.Current ?? RunState.ActiveWeather;
 				string now = Signature(line, weather);
+				// A new line object with the same points needs no new picture, but is the one to keep: checked against it, not the old one.
+				Line = line;
 				if (now != drawn)
 				{
-					Line = line;
 					Palette = Palettes.For(Scene, weather, line);
 					drawn = now;
 					Version++;

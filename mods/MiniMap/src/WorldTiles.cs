@@ -31,7 +31,11 @@ namespace HalfGripMiniMap
 		private static readonly Color32[] Ranked =
 		{
 			new Color32(46, 82, 128, 255),   // water
+			new Color32(200, 70, 150, 255),  // hill climb
+			new Color32(200, 120, 50, 255),  // rally stage
+			new Color32(196, 180, 150, 255), // footpath
 			new Color32(150, 110, 70, 255),  // track
+			new Color32(205, 195, 170, 255), // drive
 			new Color32(238, 236, 228, 255), // lane
 			new Color32(70, 70, 74, 255),    // street
 			new Color32(240, 225, 130, 255), // secondary

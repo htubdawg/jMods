@@ -1,10 +1,10 @@
 {
   "id": "stereo",
   "name": "Car Stereo",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "author": "Claude - Oretsej",
   "description": "A CD stereo built into the cockpit: one disc for each song of the soundtrack in a wallet on the sun visor, and one that plays your own songs from a folder. Worked with the cockpit hand.",
   "icon": "icon.png",
-  "gameVersion": "0.418",
-  "tools": "1.0.2"
+  "gameVersion": "0.419",
+  "tools": "1.0.6"
 }

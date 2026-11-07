@@ -31,7 +31,7 @@ namespace HalfGripSlapPack
 		{
 			context = ctx;
 			refractionSettings = new WindshieldRefractionSettings(ctx.Config);
-			enableWipers = ctx.Config.Bind("Wipers", "Enabled", true, "Enable the right-hand washer/speed stalk, windshield wipers and precipitation interaction.");
+			enableWipers = ctx.Config.Bind("Wipers", "Enabled", true, "Enable the right-hand washer/speed stalk and windshield wipers. False also removes the windshield rain/snow (WeatherEffects below); side/rear window weather is set under [Windows].");
 			enableWeather = ctx.Config.Bind("Wipers", "WeatherEffects", true, "Rain/snow impacts, buildup and blade clearing on the front glass. Supports vanilla and optional Open World weather. Restart after changing.");
 			rainObscuration = ctx.Config.Bind("Wipers", "RainObscuration", 1f,
 				new ConfigDescription("Strength of water obscuration on the windshield. Higher values reduce visibility more. Restart after changing.", new AcceptableValueRange<float>(0.5f, 3f)));

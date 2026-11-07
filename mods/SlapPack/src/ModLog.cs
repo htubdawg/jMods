@@ -14,7 +14,7 @@ namespace HalfGripSlapPack
 		internal static void Initialize(ConfigFile config, ManualLogSource log)
 		{
 			source = log;
-			verbose = config.Bind("Diagnostics", "VerboseLogging", false, "Log feature binding, weather provider and periodic refraction command/offset diagnostics.");
+			verbose = config.Bind("Diagnostics", "VerboseLogging", false, "Log feature binding, the weather provider, and periodic refraction, mirror-visibility and held-gun occlusion diagnostics. Warnings and errors are always logged.");
 		}
 
 		/// <summary>Writes shared integration diagnostics without exposing a logger to pure model code.</summary>

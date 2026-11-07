@@ -136,8 +136,15 @@ namespace HalfGripStereo
 			Disc disc = new Disc { Title = TitleOf(clip.name), Clip = clip };
 			int at = Rank(clip.name);
 			int index = All.FindIndex(d => d.Mix || Rank(d.Clip.name) > at);
-			All.Insert(index < 0 ? All.Count : index, disc);
+			if (index < 0)
+			{
+				index = All.Count;
+			}
+			All.Insert(index, disc);
 			Version++;
+			// The discs after it moved up one: what points at them by number follows (the disc in the stereo, one out of the slot).
+			Deck.DiscAdded(index);
+			StereoDash.DiscAdded(index);
 			Mod.Info("Stereo: found the song '" + clip.name + "' (" + clip.length.ToString("0.0") + " s, " + clip.channels + " channel(s), " + clip.frequency + " Hz, " + clip.loadType + "), disc " + (All.IndexOf(disc) + 1));
 		}
 

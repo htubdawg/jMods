@@ -30,7 +30,8 @@ namespace HalfGripSlapPack
 			{
 				nextScan = Time.unscaledTime + 2;
 				if (!controller) controller = UnityEngine.Object.FindFirstObjectByType<WeatherController>();
-				if (api == null || !apiActive)
+				// A bound API stays bound when inactive (outside Open World); only a missing one is looked for again.
+				if (api == null)
 				{
 					try { FindApi(); }
 					catch (Exception error) { Warn("Optional public weather API discovery failed; using vanilla precipitation: " + error.Message); }
@@ -71,7 +72,7 @@ namespace HalfGripSlapPack
 					Warn("Open World public weather API unavailable; requires WeatherView v1 (Open World 0.24.0+): " + reason);
 				return;
 			}
-			if (openWorldLoaded) Warn("Open World is loaded without public WeatherView v1; install the API test branch (0.24.0+) for variable windshield weather. Using vanilla flags.");
+			if (openWorldLoaded) Warn("Open World is loaded without public WeatherView v1; update Open World to 0.24.0 or newer for variable windshield weather. Using vanilla flags.");
 		}
 
 		/// <summary>Logs provider changes only when verbose diagnostics are enabled.</summary>

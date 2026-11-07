@@ -16,6 +16,9 @@ namespace HalfGripSlapPack
 		private HeldGunWeatherOcclusionPass pass;
 		private Gun[] guns = Array.Empty<Gun>();
 		private readonly List<HeldGunWeatherOcclusionPass.Draw> draws = new List<HeldGunWeatherOcclusionPass.Draw>();
+		// Reused every rendered frame while the glass is wet, so the scan does not allocate.
+		private readonly List<Renderer> renderers = new List<Renderer>();
+		private readonly List<Material> materials = new List<Material>();
 		private readonly HashSet<int> warned = new HashSet<int>();
 		private float nextScan;
 		private float nextDiagnostic;
@@ -48,7 +51,8 @@ namespace HalfGripSlapPack
 			foreach (Gun gun in guns)
 			{
 				if (!gun || !gun.isActiveAndEnabled || gun.fpvcamera != camera || !gun.aimModel || !gun.aimModel.gameObject.activeInHierarchy) continue;
-				foreach (Renderer renderer in gun.aimModel.GetComponentsInChildren<Renderer>(false))
+				gun.aimModel.GetComponentsInChildren(false, renderers);
+				foreach (Renderer renderer in renderers)
 				{
 					if (!renderer.enabled || renderer.forceRenderingOff || (camera.cullingMask & (1 << renderer.gameObject.layer)) == 0) continue;
 					Mesh mesh = null;
@@ -59,8 +63,8 @@ namespace HalfGripSlapPack
 						if (filter) mesh = filter.sharedMesh;
 					}
 					if (!mesh) continue;
-					Material[] materials = renderer.sharedMaterials;
-					for (int i = 0; i < Math.Min(mesh.subMeshCount, materials.Length); i++)
+					renderer.GetSharedMaterials(materials);
+					for (int i = 0; i < Math.Min(mesh.subMeshCount, materials.Count); i++)
 					{
 						Material material = materials[i];
 						// Only solid/cutout surfaces occlude. Native DepthOnly retains
@@ -90,7 +94,7 @@ namespace HalfGripSlapPack
 		internal void Stop()
 		{
 			if (subscribed) RenderPipelineManager.beginCameraRendering -= BeginCamera;
-			subscribed = false; guns = Array.Empty<Gun>(); draws.Clear();
+			subscribed = false; guns = Array.Empty<Gun>(); draws.Clear(); renderers.Clear(); materials.Clear();
 		}
 
 		private void OnDisable() { Stop(); }

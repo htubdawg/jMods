@@ -26,7 +26,7 @@ namespace HalfGripSlapPack
         internal void Initialize(ModContext ctx)
         {
             context = ctx;
-            enableWindows = ctx.Config.Bind("Windows", "Enabled", true, "Enable stock driver/passenger window-crank prototype. Windows start fully raised each race.");
+            enableWindows = ctx.Config.Bind("Windows", "Enabled", true, "Enable the driver and passenger window cranks and moving door glass. Windows start fully raised each race.");
             opacity = ctx.Config.Bind("Windows", "TintOpacity", 0.04f,
                 new ConfigDescription("Minimal blue-gray door glass opacity; windshield and rear glass are unchanged. Applied when the car is initialized.", new AcceptableValueRange<float>(0, 0.15f)));
             turns = ctx.Config.Bind("Windows", "TurnsForFullTravel", 3f,

@@ -785,6 +785,32 @@ namespace HalfGripStereo
 			l.Touch.transform.localPosition = new Vector3(t.x, (Art.DiscRadius - shows * 0.5f) * texel, t.z);
 		}
 
+		/// <summary>
+		/// A disc found late went in at <paramref name="at"/>: the discs from there on are one further on, so the one out of the slot and the
+		/// loose ones keep their disc (and are drawn again, for the number on them).
+		/// </summary>
+		internal static void DiscAdded(int at)
+		{
+			if (sticking >= at)
+			{
+				sticking++;
+			}
+			StereoDash dash = Deck.Active != null ? Deck.Active.GetComponent<StereoDash>() : null;
+			if (dash == null)
+			{
+				return;
+			}
+			foreach (Loose l in dash.loose)
+			{
+				if (l.Grab != null && l.Grab.Index >= at)
+				{
+					l.Grab.Index++;
+					l.Shown = null;
+					dash.Draw(l);
+				}
+			}
+		}
+
 		/// <summary>Is disc <paramref name="i"/> out of its sleeve (in the stereo or loose)?</summary>
 		private bool IsOut(int i) => (deck != null && deck.DiscIndex == i) || Find(i) != null;
 

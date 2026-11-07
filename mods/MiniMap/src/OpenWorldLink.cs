@@ -116,18 +116,29 @@ namespace HalfGripMiniMap
 		/// </summary>
 		internal static void Update(Vector3 player, float reach)
 		{
-			int now = version();
-			if (now != seen)
+			try
 			{
-				if (seen == int.MinValue)
+				int now = version();
+				if (now != seen)
 				{
-					Tiles.TileSize = tileSize();
-					Tiles.TilePixels = tilePixels();
+					if (seen == int.MinValue)
+					{
+						Tiles.TileSize = tileSize();
+						Tiles.TilePixels = tilePixels();
+					}
+					seen = now;
+					Tiles.Changed();
 				}
-				seen = now;
-				Tiles.Changed();
+				Tiles.Window(player.x + originX(), player.z + originZ(), reach, fetch);
 			}
-			Tiles.Window(player.x + originX(), player.z + originZ(), reach, fetch);
+			catch (Exception e)
+			{
+				// As in Active: one warning, then race maps only, instead of the maps stopping for the scene.
+				active = null;
+				broken = true;
+				Tiles.Clear();
+				Mod.Log.LogWarning("Minimap: the Open World's map stopped answering: " + e.Message);
+			}
 		}
 	}
 }

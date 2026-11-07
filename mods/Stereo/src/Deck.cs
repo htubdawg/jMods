@@ -49,6 +49,8 @@ namespace HalfGripStereo
 		private float noteUntil;
 		private int failures;
 		private string trouble;
+		/// <summary>The sound device changed (headphones plugged in, say): Unity stopped every source, so the song is started again.</summary>
+		private bool deviceChanged;
 
 		internal static Deck Active;
 
@@ -68,21 +70,58 @@ namespace HalfGripStereo
 			source.outputAudioMixerGroup = SoundController.MusicGroup;
 			source.priority = 0;
 			Discs.Find();
-			// Put in after the countdown (the cockpit found late), the game's song is already playing: take over from it now.
+			AudioSettings.OnAudioConfigurationChanged += OnAudioChanged;
+			// Put in after the countdown (the cockpit found late), the game's song is already playing: take over from it now, with the
+			// song the game is playing (the map's own is only one of the game's picks: a tutorial's or one of the race songs can be it).
 			TrackManager tm = FindFirstObjectByType<TrackManager>();
 			if (tm != null && tm.raceStarted)
 			{
-				Go(RunState.ActiveMapMusic);
+				Go(GameSong() ?? RunState.ActiveMapMusic);
 			}
 		}
 
 		private void OnDestroy()
 		{
+			AudioSettings.OnAudioConfigurationChanged -= OnAudioChanged;
 			if (Active == this)
 			{
 				Active = null;
 			}
 			Remember();
+		}
+
+		/// <summary>
+		/// A change of sound device stops every playing source. The game starts its own looping song again (SoundController.RestartMusic);
+		/// the stereo's song is started again in <see cref="Update"/>, once the game is not paused, from where it was.
+		/// </summary>
+		private void OnAudioChanged(bool deviceWasChanged)
+		{
+			if (deviceWasChanged)
+			{
+				deviceChanged = true;
+			}
+		}
+
+		/// <summary>A disc found late went in before the one in the stereo: the same disc is now one further on.</summary>
+		internal static void DiscAdded(int at)
+		{
+			if (disc >= at)
+			{
+				disc++;
+			}
+		}
+
+		/// <summary>The song the game's own music source is playing (the game names them "2D_Music_"), if one is.</summary>
+		internal static AudioClip GameSong()
+		{
+			foreach (AudioSource s in FindObjectsByType<AudioSource>(FindObjectsSortMode.None))
+			{
+				if (s != null && s.isPlaying && s.clip != null && s.gameObject.name.StartsWith("2D_Music_", StringComparison.Ordinal))
+				{
+					return s.clip;
+				}
+			}
+			return null;
 		}
 
 		/// <summary>Called in place of the game's race song: what the game picked loads its disc, unless the player chose one.</summary>
@@ -421,6 +460,16 @@ namespace HalfGripStereo
 				return;
 			}
 			source.volume = Gain();
+			if (deviceChanged && !InteriorMath.Paused && Time.timeScale > 0f)
+			{
+				deviceChanged = false;
+				if (source.clip != null && !source.isPlaying && !loading && power && !paused)
+				{
+					Mod.Info("Stereo: the sound device changed; the song goes on from " + position.ToString("0.0") + " s");
+					Restart();
+					return;
+				}
+			}
 			if (source.clip != null && source.isPlaying)
 			{
 				position = source.time;

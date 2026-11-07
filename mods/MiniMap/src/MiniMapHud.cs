@@ -77,8 +77,23 @@ namespace HalfGripMiniMap
 			}
 		}
 
-		/// <summary>The minimap's width in its own pixels: the set size cut into pixels of the set pixel size, kept even so it has a middle.</summary>
-		private static int Resolution() => Mathf.Clamp(Mathf.RoundToInt(Mod.Size.Value / (float)Mod.PixelSize.Value / 2f) * 2, 40, 300);
+		private const int MinResolution = 40;
+		private const int MaxResolution = 300;
+
+		/// <summary>
+		/// Screen pixels per minimap pixel: the set pixel size, unless that would take the map past its finest or coarsest resolution, in
+		/// which case the nearest whole number that keeps the minimap at its set size.
+		/// </summary>
+		private static int PixelScale()
+		{
+			int size = Mod.Size.Value;
+			int coarsest = Mathf.Max(1, size / MinResolution);
+			int finest = Mathf.Min(coarsest, Mathf.CeilToInt(size / (float)MaxResolution));
+			return Mathf.Clamp(Mod.PixelSize.Value, finest, coarsest);
+		}
+
+		/// <summary>The minimap's width in its own pixels: the set size cut into pixels of <see cref="PixelScale"/>, kept even so it has a middle.</summary>
+		private static int Resolution() => Mathf.Clamp(Mathf.RoundToInt(Mod.Size.Value / (float)PixelScale() / 2f) * 2, MinResolution, MaxResolution);
 
 		private void Draw()
 		{
@@ -104,7 +119,7 @@ namespace HalfGripMiniMap
 		/// <summary>Puts the minimap in its corner, a whole number of screen pixels per map pixel (at 1080p); the settings can change while the game runs.</summary>
 		private void Place()
 		{
-			float size = pixels.Size * Mod.PixelSize.Value;
+			float size = pixels.Size * PixelScale();
 			float margin = Mod.Margin.Value;
 			string corner = Mod.Corner.Value ?? "";
 			float x = corner.EndsWith("Right") ? 1f : 0f;
