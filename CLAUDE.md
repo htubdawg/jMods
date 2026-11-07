@@ -42,7 +42,7 @@ make sure this README's section for the mod matches what the release does.
 | OpenWorld | 0.26.0, game 0.418, tools 1.0.6 | **Done, waiting on the owner**: [htubdawg/HalfGripOpenWorld#40](https://github.com/htubdawg/HalfGripOpenWorld/pull/40) (0.26.1: game 0.419, memory freed after each race, world size stated right: about 9.7 km across, not 32 km, weather fix). README section updated in this PR. Next: owner merges #40 and publishes v0.26.1. |
 | ProcTrack | 1.0.28, game 0.418, no `tools` | Not started. Game version is behind; `tools` missing. |
 | Helicopter | 0.2.6, game 0.418, tools 1.0.2 | Not started. Both versions are behind. |
-| Stereo | 0.2.3, game 0.418, tools 1.0.2 | **Done, waiting on the owner**: [htubdawg/HalfGripStereo#4](https://github.com/htubdawg/HalfGripStereo/pull/4) (0.2.4: game 0.419, tools 1.0.6; music restarts after a sound device change, disc numbers kept when a song is found late, a stereo fitted late takes the playing song, the game's song comes back if the mod is unloaded mid-race). README section checked: matches. Next: owner merges #4 and publishes v0.2.4. |
+| Stereo | 0.2.3, game 0.418, tools 1.0.2 | **Done, waiting on the owner**: [htubdawg/HalfGripStereo#4](https://github.com/htubdawg/HalfGripStereo/pull/4) (0.2.4: game 0.419, tools 1.0.6; music restarts after a sound device change, disc numbers kept when a song is found late, a stereo fitted late takes the playing song). README section checked: matches. Next: owner merges #4 and publishes v0.2.4. |
 | SlapPack | 0.8.12, game 0.418, tools 1.0.6 | Not started. Game version is behind. |
 
 Current versions when this was written: game **0.419** (HalfGripRefs), HalfGripTools **1.0.6**. Check both again before using them.
