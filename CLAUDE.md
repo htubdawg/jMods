@@ -45,7 +45,7 @@ starting** (`git ls-remote --tags https://github.com/htubdawg/<repo>`; the tag's
 | ProcTrack | v1.0.29, game 0.419, tools 1.0.6 | **Done**. |
 | Helicopter | v0.2.7, game 0.419, tools 1.0.6 | **Done**. |
 | Stereo | v0.2.4, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripStereo#4). |
-| SlapPack | v0.8.12, game 0.418, tools 1.0.6 | **Next.** Game version is behind. |
+| SlapPack | v0.8.12, game 0.418, tools 1.0.6 | **PR open**: htubdawg/HalfGripSlapPack#7 (0.8.13, game 0.419; tutorial fix, config comments, README). It contains #6, so merging #7 completes both. Then release v0.8.13. |
 
 Current versions when this was written: game **0.419** (HalfGripRefs), HalfGripTools **1.0.6**. Check both again before using them.
 
@@ -59,7 +59,9 @@ README section with the audit's PR instead.
   permission check. Use a new branch name instead of rewriting an old one, and ask the owner to delete branches on GitHub.
 - `add_repo` with push access was refused by the auto-mode permission check until the owner allowed it; a public repo can still be
   cloned read-only, but not pushed to.
-- Building HalfGripTools from source worked in the Stereo audit session (full `tools/check.sh` ran); earlier it was refused by the permission check, so `tools/check.sh`-style full compiles could not run.
+- Building HalfGripTools from source worked in the Stereo audit session (full `tools/check.sh` ran); it was refused by the permission check before that and again in the SlapPack audit session, so `tools/check.sh`-style full compiles could not always run.
+- Decompiling the game works: `dotnet tool install ilspycmd --tool-path <scratch>/ilspy --version 8.2.0.7535`, then run it with
+  `DOTNET_ROLL_FORWARD=Major` (only .NET 8 is installed) and `-p -o <dir> Assembly-CSharp.dll` to check how game code behaves.
   A partial compile works: every file of the mod except those that `using HalfGripTools`, plus a small stand-in for the members
   they provide, against `HalfGripRefs/game` (see HalfGripMiniMap#21's checks). Better: a stand-in `HalfGripTools` namespace with the
   members the mod calls (signatures copied from HalfGripTools' source), so every file compiles (done for HalfGripOpenWorld#40).

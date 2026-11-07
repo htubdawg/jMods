@@ -53,13 +53,13 @@ An interactive CD player mounted in the cockpit, with a CD wallet on the sun vis
 
 ### [SlapPack](https://github.com/htubdawg/HalfGripSlapPack)
 
-More things to grab in your car: an adjustable rear-view mirror, working window cranks, a turn-signal stalk, and three-speed windshield wipers with a washer. Rain and slush build up on the glass and distort the view until you wipe them away. Works with the base game's weather and with Open World's variable rain, snow, and wind.
+More things to grab in your car: an adjustable rear-view mirror, working window cranks, a turn-signal stalk, and three-speed windshield wipers with a washer. Rain and slush build up on the windshield and distort the view until you wipe them away; the side and rear windows get lighter rain and snow that clears by itself. Works with the base game's weather and with Open World's variable rain, snow, and wind (Open World 0.24.0 or newer). Only the game's own cars get the additions: custom chassis such as Helicopter turn them off.
 
 | Control | How to use it |
 |---|---|
 | **Rear-view mirror** | Grab and drag to aim; right-click to reset. The position is saved between races |
 | **Window cranks** | Grab a door's crank and circle your hand: clockwise lowers the window, counterclockwise raises it |
-| **Turn-signal stalk** (left) | Down for left, up for right. A half tap flashes three times; full travel latches |
+| **Turn-signal stalk** (left) | Down for left, up for right. A half tap flashes three times; full travel latches and cancels after the turn |
 | **Wiper sleeve** (right) | Hold right-click and drag through **0 / I / II / III**: off, intermittent, continuous, fast |
 | **Washer stalk** (right) | Pull down to spray and wipe |
 
