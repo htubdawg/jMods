@@ -33,17 +33,19 @@ version) and `4l3x4nd3r0/HalfGripTools` (the mod loader, public; current version
 
 ## The audit (keep current)
 
-The owner is going through the mods one at a time: read the released source in `mods/<Mod>/`, fix bugs, update versions, and
-make sure this README's section for the mod matches what the release does.
+The owner is going through the mods one at a time: read the mod's released source, fix bugs, update versions, and make sure this
+README's section for the mod matches what the release does. The owner syncs `mods/` once at the end, so `mods/` lags behind and is
+not what the table tracks: the table tracks each source repo's newest release tag. **Check this table against the tags before
+starting** (`git ls-remote --tags https://github.com/htubdawg/<repo>`; the tag's `mod.json` has the versions) and fix it if it is stale.
 
-| Mod | Released (in `mods/`) | Status |
+| Mod | Newest release | Status |
 |---|---|---|
-| MiniMap | 1.2.5, game 0.418, tools 1.0.2 | **Done**: fixes in [htubdawg/HalfGripMiniMap#21](https://github.com/htubdawg/HalfGripMiniMap/pull/21), game 0.419 and tools 1.0.6 in [htubdawg/HalfGripMiniMap#22](https://github.com/htubdawg/HalfGripMiniMap/pull/22); both merged and v1.2.6 published (the sync brings it here). |
-| OpenWorld | 0.26.0, game 0.418, tools 1.0.6 | **Done, waiting on the owner**: [htubdawg/HalfGripOpenWorld#40](https://github.com/htubdawg/HalfGripOpenWorld/pull/40) (0.26.1: game 0.419, memory freed after each race, world size stated right: about 9.7 km across, not 32 km, weather fix). README section updated in this PR. Next: owner merges #40 and publishes v0.26.1. |
-| ProcTrack | 1.0.28, game 0.418, no `tools` | Not started. Game version is behind; `tools` missing. |
-| Helicopter | 0.2.6, game 0.418, tools 1.0.2 | Not started. Both versions are behind. |
-| Stereo | 0.2.3, game 0.418, tools 1.0.2 | **Done, waiting on the owner**: [htubdawg/HalfGripStereo#4](https://github.com/htubdawg/HalfGripStereo/pull/4) (0.2.4: game 0.419, tools 1.0.6; music restarts after a sound device change, disc numbers kept when a song is found late, a stereo fitted late takes the playing song). README section checked: matches. Next: owner merges #4 and publishes v0.2.4. |
-| SlapPack | 0.8.12, game 0.418, tools 1.0.6 | Not started. Game version is behind. |
+| MiniMap | v1.2.6, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripMiniMap#21, #22). |
+| OpenWorld | v0.26.1, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripOpenWorld#40). |
+| ProcTrack | v1.0.29, game 0.419, tools 1.0.6 | **Done**. |
+| Helicopter | v0.2.7, game 0.419, tools 1.0.6 | **Done**. |
+| Stereo | v0.2.4, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripStereo#4). |
+| SlapPack | v0.8.12, game 0.418, tools 1.0.6 | **Next.** Game version is behind. |
 
 Current versions when this was written: game **0.419** (HalfGripRefs), HalfGripTools **1.0.6**. Check both again before using them.
 
