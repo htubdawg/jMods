@@ -1,9 +1,10 @@
 {
   "id": "slappack",
   "name": "Slap Pack",
-  "version": "0.8.13",
+  "version": "0.8.14",
   "author": "Codex - Oretsej",
   "description": "Adjustable mirror, working window cranks, turn signals, manual windshield wipers, and light self-clearing rain/snow on side and rear windows. Supports vanilla and Open World weather.",
+  "icon": "icon.png",
   "gameVersion": "0.419",
   "tools": "1.0.6"
 }
