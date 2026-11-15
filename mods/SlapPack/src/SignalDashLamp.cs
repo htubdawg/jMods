@@ -27,9 +27,9 @@ namespace HalfGripSlapPack
 
             Texture2D icon = Icon(false), halo = Icon(true);
             owned.Add(icon); owned.Add(halo);
-            on = WindowMaterials.Transparent(new Color(0.28f, 0.96f, 0.34f, 1), icon, owned);
+            on = Glowing(WindowMaterials.Transparent(new Color(0.28f, 0.96f, 0.34f, 1), icon, owned));
             off = WindowMaterials.Transparent(new Color(0.045f, 0.14f, 0.065f, 1), icon, owned);
-            Material bloom = WindowMaterials.Transparent(new Color(0.15f, 0.85f, 0.24f, 0.3f), halo, owned);
+            Material bloom = Glowing(WindowMaterials.Transparent(new Color(0.15f, 0.85f, 0.24f, 0.3f), halo, owned));
             glow = Quad("IndicatorGlow", 0.195f, 0.117f, -0.012f, bloom, right, layer, owned);
             glyph = Quad("IndicatorArrow", 0.18f, 0.108f, -0.014f, off, right, layer, owned);
             glow.enabled = false;
@@ -52,6 +52,21 @@ namespace HalfGripSlapPack
                 ? new[] { Vector2.zero, Vector2.right, Vector2.one, Vector2.up }
                 : new[] { Vector2.right, Vector2.zero, Vector2.up, Vector2.one };
             return renderer;
+        }
+
+        /// <summary>
+        /// Lets a lit lamp glow by itself (emission = its own colour), so the flashing arrow shows in a dark cockpit instead
+        /// of only reflecting whatever cabin light there is. Leaves a shader without emission unchanged.
+        /// </summary>
+        private static Material Glowing(Material material)
+        {
+            if (material.HasProperty("_EmissionColor"))
+            {
+                Color color = material.HasProperty("_BaseColor") ? material.GetColor("_BaseColor") : Color.white;
+                material.SetColor("_EmissionColor", new Color(color.r, color.g, color.b, 1));
+                material.EnableKeyword("_EMISSION");
+            }
+            return material;
         }
 
         private static Vector3[] Bevel(float x, float y, float cut, float z) => new[] {

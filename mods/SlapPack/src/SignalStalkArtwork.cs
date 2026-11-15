@@ -42,6 +42,10 @@ namespace HalfGripSlapPack
                 indices[triangle] = first; indices[triangle + 1] = first + 1; indices[triangle + 2] = first + 2;
                 indices[triangle + 3] = first; indices[triangle + 4] = first + 2; indices[triangle + 5] = first + 3;
             }
+            // Mirroring X for the right-hand stalk reverses the winding; orient both toward the cockpit camera and its lights.
+            var xs = new float[vertices.Length]; var ys = new float[vertices.Length];
+            for (int i = 0; i < vertices.Length; i++) { xs[i] = vertices[i].x; ys[i] = vertices[i].y; }
+            CockpitFacing.Orient(indices, xs, ys);
             var mesh = new Mesh { name = "SlapPack pixel-art signal stalk" };
             owned.Add(mesh);
             mesh.vertices = vertices; mesh.uv = uv; mesh.triangles = indices;

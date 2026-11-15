@@ -18,7 +18,7 @@ namespace HalfGripSlapPack
             var mesh = new Mesh { name = name };
             owned.Add(mesh);
             mesh.vertices = points;
-            mesh.triangles = Enumerable.Range(1, points.Length - 2).SelectMany(i => new[] { 0, i, i + 1 }).ToArray();
+            mesh.triangles = CockpitFacing.Fan(points.Select(p => p.x).ToArray(), points.Select(p => p.y).ToArray());
             mesh.RecalculateBounds();
             mesh.RecalculateNormals();
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
