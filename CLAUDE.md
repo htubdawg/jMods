@@ -44,14 +44,14 @@ starting** (`git ls-remote --tags https://github.com/htubdawg/<repo>`; the tag's
 | OpenWorld | v0.26.1, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripOpenWorld#40). |
 | ProcTrack | v1.0.29, game 0.419, tools 1.0.6 | **Done**. |
 | Helicopter | v0.2.7, game 0.419, tools 1.0.6 | **Done**. |
-| Stereo | v0.2.4, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripStereo#4). |
-| SlapPack | v0.8.13, game 0.419, tools 1.0.6 | **Done** (htubdawg/HalfGripSlapPack#6, #7). |
+| Stereo | v0.3.0, game 0.419, tools 1.0.6 | **Done** for v0.2.4 (htubdawg/HalfGripStereo#4). v0.3.0 (#5, #6: scroll-wheel knobs, wallet pop-out) not re-audited; README section updated for it. |
+| SlapPack | v0.8.18, game 0.419, tools 1.0.6 | **Done** for v0.8.13 (htubdawg/HalfGripSlapPack#6, #7). v0.8.14–0.8.18 (#8–#10: icon, stalk lighting, mouse-wheel and articulated tandem wipers) not re-audited; README section updated for them. |
 
 Every mod has been audited once. Current versions when this was written: game **0.419** (HalfGripRefs), HalfGripTools **1.0.6**.
 Check both again before using them. When either changes, or a mod gets a new release, check that mod again the same way and
 add a row note here.
 
-**README:** every mod's section here matches its newest release (MiniMap's was rewritten with the SlapPack audit's jMods PR).
+**README:** every mod's section here matches its newest release (MiniMap's was rewritten with the SlapPack audit's jMods PR; Stereo's and SlapPack's were updated for v0.3.0 and v0.8.18). SlapPack's wiper pictures use the file names on its `main` (`wipers-stopped.png`, `wipers-moving.png`, renamed after v0.8.18 by #12).
 Old branches the owner should delete on GitHub: `claude/blissful-mayer-0t7ba2` (an unwanted MiniMap README rewrite) and, in
 HalfGripSlapPack, `claude/blissful-albattani-b0ecpx` (merged through #7).
 
