@@ -168,204 +168,30 @@ namespace HalfGripStereo
 		}
 
 		// ---------------------------------------------------------------------------------------------------------------------------
-		// The head unit: a black single-piece car stereo, a little taller than one DIN, seen face on like the dash's dials.
+		// The head unit: a black single-piece car stereo, a little taller than one DIN, seen face on like the dash's dials. Since 0.3.0
+		// it has no keys (too small for the hand, the owner found): a knob at each end, the left half mirrored (the owner's wish).
 
-		private static readonly Color32 Outline = new Color32(12, 12, 14, 255);
-		private static readonly Color32 Body = new Color32(40, 40, 45, 255);
-		private static readonly Color32 BodyTop = new Color32(66, 66, 72, 255);
-		private static readonly Color32 BodyLow = new Color32(28, 28, 32, 255);
-		private static readonly Color32 Chrome = new Color32(150, 150, 158, 255);
-		private static readonly Color32 ChromeDark = new Color32(92, 92, 100, 255);
-		private static readonly Color32 Slot = new Color32(6, 6, 8, 255);
-		private static readonly Color32 KnobRim = new Color32(100, 100, 108, 255);
-		private static readonly Color32 KnobFace = new Color32(58, 58, 64, 255);
-		private static readonly Color32 KnobDark = new Color32(30, 30, 34, 255);
-		private static readonly Color32 KnobMark = new Color32(220, 220, 220, 255);
-		private static readonly Color32 Key = new Color32(64, 64, 70, 255);
-		private static readonly Color32 KeyTop = new Color32(98, 98, 106, 255);
-		private static readonly Color32 KeyLow = new Color32(22, 22, 26, 255);
-		private static readonly Color32 KeyPressed = new Color32(44, 44, 49, 255);
-		private static readonly Color32 KeySign = new Color32(190, 190, 198, 255);
-		private static readonly Color32 LedOn = new Color32(236, 52, 36, 255);
-		private static readonly Color32 LedOff = new Color32(72, 22, 20, 255);
-		private static readonly Color32 Badge = new Color32(176, 150, 96, 255);
-
-		/// <summary>The head unit's size in dash pixels.</summary>
-		internal const int UnitWidth = 64;
+		/// <summary>The head unit's size in dash pixels: two knobs round the display, mirror images about the middle (37).</summary>
+		internal const int UnitWidth = 74;
 		internal const int UnitHeight = 28;
 
 		/// <summary>The display's window on the unit (inside the chrome frame), in dash pixels; the display itself is drawn at <see cref="LcdDetail"/> times this.</summary>
 		internal static readonly RectInt LcdWindow = new RectInt(21, 10, 32, 10);
 		internal const int LcdDetail = 2;
 
-		/// <summary>The parts of the unit the hand can press.</summary>
-		internal enum Part { Knob, Power, Prev, Play, Next, Eject }
+		/// <summary>The parts of the unit the hand works: the volume knob on the left, the seek knob on the right.</summary>
+		internal enum Part { Volume, Seek }
 
-		internal static readonly Part[] Parts = { Part.Knob, Part.Power, Part.Prev, Part.Play, Part.Next, Part.Eject };
+		internal static readonly Part[] Parts = { Part.Volume, Part.Seek };
 
-		/// <summary>Where each part is on the unit, in dash pixels (the knob's box round its circle).</summary>
-		internal static RectInt Place(Part part)
-		{
-			switch (part)
-			{
-				case Part.Knob: return new RectInt(3, 5, 15, 15);
-				case Part.Power: return new RectInt(20, 2, 7, 5);
-				case Part.Prev: return new RectInt(29, 2, 7, 5);
-				case Part.Play: return new RectInt(38, 2, 7, 5);
-				case Part.Next: return new RectInt(47, 2, 7, 5);
-				default: return new RectInt(56, 21, 6, 4);
-			}
-		}
+		/// <summary>Each knob's box round its circle, in dash pixels; the right one is the left one mirrored.</summary>
+		internal static RectInt Place(Part part) => part == Part.Volume ? new RectInt(3, 5, 15, 15) : new RectInt(UnitWidth - 3 - 15, 5, 15, 15);
 
 		/// <summary>
-		/// The head unit's casing (everything but the display, which is its own glowing sprite over the window): <paramref name="pressed"/>
-		/// is drawn pushed in, <paramref name="power"/> lights the power key's red light, <paramref name="knobTurn"/> (0 to 1) turns the
-		/// volume knob's mark from 7 o'clock to 5 o'clock.
+		/// The head unit's casing, flat (no lean; everything but the display, which is its own glowing sprite over the window), for the
+		/// preview's pictures: the same drawing as the cockpit's (<see cref="Face"/>) with its sides upright.
 		/// </summary>
-		/// <remarks>The flat layout; in the cockpit the unit is drawn on its <see cref="Face"/>, from these places.</remarks>
-		internal static Canvas HeadUnit(Part? pressed, bool power, float knobTurn)
-		{
-			int w = UnitWidth, h = UnitHeight;
-			Canvas c = new Canvas(w, h);
-			c.Rect(0, 0, w - 1, h - 1, Outline);
-			c.Rect(1, 1, w - 2, h - 2, Body);
-			// A lighter lip along the top (light from above, as on the dash's parts), a darker one along the bottom.
-			c.Rect(1, h - 3, w - 2, h - 2, BodyTop);
-			c.Rect(1, 1, w - 2, 1, BodyLow);
-			c.Speckle(1, 1, w - 2, h - 2, 5, 11);
-
-			// The CD slot across the top, with a highlight under its lip, and the eject key at its end.
-			c.Rect(20, 23, 53, 23, Slot);
-			c.Rect(20, 22, 53, 22, BodyTop);
-			Key3(c, Place(Part.Eject), pressed == Part.Eject);
-			RectInt e = Place(Part.Eject);
-			int ex = e.x + 1, ey = e.y + (pressed == Part.Eject ? 0 : 1);
-			c.Set(ex + 1, ey + 2, KeySign);
-			c.Rect(ex, ey + 1, ex + 2, ey + 1, KeySign);
-			c.Rect(ex, ey, ex + 2, ey, KeySign);
-
-			// The display's chrome frame; the window inside it is left dark, the display sprite covers it.
-			RectInt l = LcdWindow;
-			c.Rect(l.x - 2, l.y - 2, l.xMax + 1, l.yMax + 1, ChromeDark);
-			c.Rect(l.x - 2, l.yMax + 1, l.xMax + 1, l.yMax + 1, Chrome);
-			c.Rect(l.xMax + 1, l.y - 1, l.xMax + 1, l.yMax + 1, Chrome);
-			c.Rect(l.x - 1, l.y - 1, l.xMax, l.yMax, Outline);
-			c.Rect(l.x, l.y, l.xMax - 1, l.yMax - 1, new Color32(20, 12, 6, 255));
-
-			// The volume knob: a chrome rim, a dark groove, a knurled face, a white mark that turns with the volume.
-			RectInt k = Place(Part.Knob);
-			float cx = k.x + (k.width - 1) * 0.5f, cy = k.y + (k.height - 1) * 0.5f;
-			bool knobIn = pressed == Part.Knob;
-			c.Disc(cx, cy, 7.4f, Outline);
-			c.Disc(cx, cy, 6.6f, KnobRim);
-			c.Disc(cx, cy, 5.6f, KnobDark);
-			c.Disc(cx, cy + (knobIn ? -0.5f : 0f), 4.8f, knobIn ? KnobDark : KnobFace);
-			for (int a = 0; a < 12; a++)
-			{
-				float ang = a * Mathf.PI / 6f;
-				c.Set(Mathf.RoundToInt(cx + Mathf.Cos(ang) * 4.6f), Mathf.RoundToInt(cy + Mathf.Sin(ang) * 4.6f), KnobRim);
-			}
-			c.Disc(cx - 1.5f, cy + 1.5f, 1.1f, Shade(KnobFace, 26));
-			float turn = Mathf.Lerp(Mathf.PI * 1.25f, -Mathf.PI * 0.25f, Mathf.Clamp01(knobTurn));
-			for (float r = 1.5f; r <= 4.2f; r += 0.5f)
-			{
-				c.Set(Mathf.RoundToInt(cx + Mathf.Cos(turn) * r), Mathf.RoundToInt(cy + Mathf.Sin(turn) * r), KnobMark);
-			}
-			// Tick marks round the knob for the volume's range.
-			for (int t = 0; t <= 4; t++)
-			{
-				float ang = Mathf.Lerp(Mathf.PI * 1.25f, -Mathf.PI * 0.25f, t / 4f);
-				c.Set(Mathf.RoundToInt(cx + Mathf.Cos(ang) * 8.2f), Mathf.RoundToInt(cy + Mathf.Sin(ang) * 8.2f), ChromeDark);
-			}
-
-			// The keys under the display.
-			foreach (Part p in new[] { Part.Power, Part.Prev, Part.Play, Part.Next })
-			{
-				RectInt r = Place(p);
-				bool down = pressed == p;
-				Key3(c, r, down);
-				int sx = r.x + 2, sy = r.y + (down ? 1 : 2);
-				switch (p)
-				{
-					case Part.Power:
-						// The power sign (a ring open at the top, a stroke through it) beside a red light that is lit while on.
-						c.Rect(sx - 1, sy - 1, sx - 1, sy, KeySign);
-						c.Rect(sx + 1, sy - 1, sx + 1, sy, KeySign);
-						c.Set(sx, sy - 1, KeySign);
-						c.Rect(sx, sy, sx, sy + 1, KeySign);
-						c.Set(sx + 3, sy + 1, power ? LedOn : LedOff);
-						break;
-					case Part.Prev:
-						c.Rect(sx - 1, sy - 1, sx - 1, sy + 1, KeySign);
-						c.Set(sx, sy, KeySign);
-						c.Rect(sx + 1, sy - 1, sx + 1, sy + 1, KeySign);
-						c.Set(sx + 2, sy, KeySign);
-						c.Rect(sx + 3, sy - 1, sx + 3, sy + 1, KeySign);
-						c.Set(sx + 2, sy, KeySign);
-						break;
-					case Part.Play:
-						c.Rect(sx - 1, sy - 1, sx - 1, sy + 1, KeySign);
-						c.Set(sx, sy, KeySign);
-						c.Rect(sx + 2, sy - 1, sx + 2, sy + 1, KeySign);
-						c.Rect(sx + 3, sy - 1, sx + 3, sy + 1, KeySign);
-						break;
-					case Part.Next:
-						c.Rect(sx - 1, sy - 1, sx - 1, sy + 1, KeySign);
-						c.Set(sx, sy, KeySign);
-						c.Rect(sx + 1, sy - 1, sx + 1, sy + 1, KeySign);
-						c.Set(sx + 2, sy, KeySign);
-						c.Rect(sx + 3, sy - 1, sx + 3, sy + 1, KeySign);
-						break;
-				}
-			}
-			// Prev is the mirror of next: |<< rather than >>|.
-			Mirror(c, Place(Part.Prev));
-
-			// A small gold "CD" badge in the right hand corner, the way car stereos wore one.
-			Text(c, "CD", 56, 11, Badge);
-			c.Rect(56, 9, 62, 9, ChromeDark);
-			return c;
-		}
-
-		/// <summary>A key: a raised block with a light top edge and a dark bottom edge, or pushed in, flat and darker.</summary>
-		private static void Key3(Canvas c, RectInt r, bool down)
-		{
-			c.Rect(r.x, r.y, r.xMax - 1, r.yMax - 1, KeyLow);
-			if (down)
-			{
-				c.Rect(r.x + 1, r.y, r.xMax - 2, r.yMax - 2, KeyPressed);
-				return;
-			}
-			c.Rect(r.x, r.y + 1, r.xMax - 1, r.yMax - 1, Key);
-			c.Rect(r.x, r.yMax - 1, r.xMax - 1, r.yMax - 1, KeyTop);
-		}
-
-		/// <summary>Mirrors the key signs (only their light pixels) left for right inside a key's box.</summary>
-		private static void Mirror(Canvas c, RectInt r)
-		{
-			List<Vector2Int> lit = new List<Vector2Int>();
-			for (int y = r.y; y < r.yMax; y++)
-			{
-				for (int x = r.x; x < r.xMax; x++)
-				{
-					if (Same(c.Get(x, y), KeySign))
-					{
-						lit.Add(new Vector2Int(x, y));
-					}
-				}
-			}
-			Color32 under = c.Get(r.x + 1, r.y + 2);
-			foreach (Vector2Int p in lit)
-			{
-				c.Set(p.x, p.y, under);
-			}
-			foreach (Vector2Int p in lit)
-			{
-				c.Set(r.x + r.xMax - 1 - p.x, p.y, KeySign);
-			}
-		}
-
-		private static bool Same(Color32 a, Color32 b) => a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
+		internal static Canvas HeadUnit(Part? pressed, float volumeTurn, int seekNotches) => new Face(Vector2.zero, 0f).Casing(pressed, volumeTurn, seekNotches);
 
 		// ---------------------------------------------------------------------------------------------------------------------------
 		// The display: amber segments on a dark brown glass, with the faint ghost of every unlit segment, as on an old car stereo.
@@ -489,6 +315,8 @@ namespace HalfGripStereo
 			public string Mark;
 			/// <summary>The disc is not in its sleeve (in the stereo, in the hand): the sleeve is empty.</summary>
 			public bool Out;
+			/// <summary>The hand hovers its sleeve: the disc stands out of its sleeve's cut, to the right (Visor.PopOut pixels).</summary>
+			public bool Hovered;
 		}
 
 		/// <summary>Columns from one disc to the next, and how much of each disc shows past its sleeve's cut.</summary>
@@ -501,6 +329,18 @@ namespace HalfGripStereo
 		/// <summary>Rows under the discs for their numbers.</summary>
 		private const int NumberRows = 7;
 		internal const int VisorHeight = WalletBottom + NumberRows + DiscSize + 2 + 4;
+
+		/// <summary>The most a hovered disc comes out (the top of Visor.PopOut's range).</summary>
+		internal const int MaxPop = 16;
+
+		/// <summary>
+		/// Clear columns right of the visor in its picture, so the last disc pulled out by up to <see cref="MaxPop"/> is drawn whole
+		/// past the visor's end (the visor itself never widens): the last disc's right edge is 8 columns short of the visor's end.
+		/// </summary>
+		internal const int Spill = MaxPop - 8;
+
+		/// <summary>The visor picture's width: the visor and the clear <see cref="Spill"/> right of it.</summary>
+		internal static int VisorCanvasWidth(int discs) => VisorWidth(discs) + Spill;
 
 		/// <summary>The visor's width for <paramref name="discs"/> discs.</summary>
 		internal static int VisorWidth(int discs) => WalletLeft + Lead + (Mathf.Max(1, discs) - 1) * DiscPitch + DiscSize + 4 + WalletLeft;
@@ -516,14 +356,26 @@ namespace HalfGripStereo
 		}
 
 		/// <summary>
+		/// The hand's box for disc <paramref name="i"/>: its <see cref="PocketPlace"/> widened right to the next disc's (one
+		/// <see cref="DiscPitch"/> wide); the boxes do not overlap, and a box does not move when its disc pops, so it never flickers.
+		/// </summary>
+		internal static RectInt HoverPlace(int i)
+		{
+			RectInt p = PocketPlace(i);
+			return new RectInt(p.x, p.y, DiscPitch, p.height);
+		}
+
+		/// <summary>
 		/// The sun visor, folded up against the roof, with the wallet strapped round it. A disc that is out leaves its sleeve empty and
 		/// dark. Drawn back to front: each disc, then its sleeve over it, from the last (at the back, on the right) to the first.
 		/// </summary>
-		internal static Canvas VisorWallet(IList<DiscLook> discs)
+		/// <param name="pop">How far a hovered disc comes out of its sleeve to the right, in pixels.</param>
+		internal static Canvas VisorWallet(IList<DiscLook> discs, int pop)
 		{
 			int n = Mathf.Max(1, discs.Count);
-			int w = VisorWidth(n), h = VisorHeight;
-			Canvas c = new Canvas(w, h);
+			int w = VisorWidth(n), h = VisorHeight, cw = VisorCanvasWidth(n);
+			pop = Mathf.Clamp(pop, 0, MaxPop);
+			Canvas c = new Canvas(cw, h);
 			// The padded visor: rounded corners at the bottom (the free edge), straight along the hinge at the top.
 			c.Rect(1, 0, w - 2, h - 1, VisorEdge);
 			c.Rect(0, 2, w - 1, h - 1, VisorEdge);
@@ -558,7 +410,8 @@ namespace HalfGripStereo
 				}
 				else
 				{
-					DrawDisc(c, cx, cy, DiscRadius, d.Label);
+					// A hovered disc slides out of its sleeve's cut, to the right, over the next sleeve; the sleeve itself stays put.
+					DrawDisc(c, cx + (d.Hovered ? pop : 0), cy, DiscRadius, d.Label);
 				}
 				// The sleeve: everything left of its cut, the cut a circle the disc's size moved left by the crescent.
 				float sx = cx - Crescent;
@@ -590,6 +443,26 @@ namespace HalfGripStereo
 			}
 			c.Rect(wx0, wy0, wx0, wy1, WalletEdge);
 			c.Rect(wx1, wy0, wx1, wy1, WalletEdge);
+			// A hovered last disc pulled out far enough sticks out past the wallet's right edge: drawn again over the edge, the visor
+			// beyond it and the clear spill past the visor (no sleeve reaches there), so it is not cut by either end.
+			int last = n - 1;
+			if (last < discs.Count && discs[last].Hovered && !discs[last].Out)
+			{
+				Vector2Int corner = DiscCorner(last);
+				Canvas over = new Canvas(cw, h);
+				DrawDisc(over, corner.x + DiscRadius - 0.5f + pop, corner.y + DiscRadius - 0.5f, DiscRadius, discs[last].Label);
+				for (int y = 0; y < h; y++)
+				{
+					for (int x = wx1; x < cw; x++)
+					{
+						Color32 p = over.Get(x, y);
+						if (p.a > 0)
+						{
+							c.Set(x, y, p);
+						}
+					}
+				}
+			}
 			int px0 = wx0 + 3, px1 = wx0 + Lead + 1, py1 = wy0 + 20;
 			c.Rect(px0, wy0 + 3, px1, py1, WalletEdge);
 			c.Rect(px0 + 1, wy0 + 3, px1 - 1, py1 - 1, Wallet);

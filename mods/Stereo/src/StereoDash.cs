@@ -9,13 +9,16 @@ namespace HalfGripStereo
 	///
 	/// - the **head unit**, standing just left of the steering wheel (sized from the wheel's own sprite, so it follows the wheel), slanted
 	///   in the dash's perspective (<see cref="Face"/>: its lines run to the cockpit camera's vanishing point, as the dash's do), with its
-	///   display as a glowing sprite of its own, a click target on each key, and the volume knob grabbed and turned by the hand;
+	///   display as a glowing sprite of its own, and two knobs the hand points at: the mouse wheel turns them (volume on the left, next and
+	///   previous on the right), a left click pauses (left) or ejects (right). The right knob is kept outside the steering wheel's own
+	///   grab area, which would otherwise take the hand from it;
 	/// - the **CD wallet on the sun visor**, at the top left of the view (placed through the cockpit camera, at the wheel's depth), with a
 	///   crescent of each disc showing past its sleeve.
 	///
 	/// The discs are carried by hand (the owner's wish): the hand grabs one from its sleeve, and let go over the stereo it slides into
-	/// the slot; over the visor it goes back in its sleeve; anywhere else it falls, and once out of sight it is back in its sleeve. A
-	/// right click anywhere on the stereo (or the eject key) pushes the disc half out of the slot, where the hand can take it.
+	/// the slot; over the visor it goes back in its sleeve; anywhere else it falls, and once out of sight it is back in its sleeve. The
+	/// disc under the hand on the visor stands out of its sleeve a little, so the player sees which one they will take. A click on the
+	/// right knob pushes the disc half out of the slot, where the hand can take it.
 	///
 	/// The cockpit is flat sprites drawn by its own camera; these are the same, at the cockpit's own pixel size (the middle value over
 	/// its sprites, as the MiniMap's GPS measures it), in a copy of the wheel's lit material, so they are lit as the cockpit is. The
@@ -32,7 +35,7 @@ namespace HalfGripStereo
 		/// <summary>Cockpit units between the head unit's right edge and the wheel's rim.</summary>
 		private const float WheelGap = 0.15f;
 		private const float FallbackTexel = 0.05f;
-		/// <summary>How long a key shows pushed in.</summary>
+		/// <summary>How long a knob shows pushed in after a click.</summary>
 		private const float PressTime = 0.15f;
 		/// <summary>Seconds per letter the song's name scrolls along the display.</summary>
 		private const float ScrollStep = 0.3f;
@@ -43,6 +46,8 @@ namespace HalfGripStereo
 
 		/// <summary>The disc sticking out of the slot (ejected, not yet taken), or -1. Kept between races as the deck's state is.</summary>
 		private static int sticking = -1;
+		/// <summary>The seek knob's turn in notches (it turns round and round; only its mark shows it). Kept between races.</summary>
+		private static int seekNotches;
 
 		private Deck deck;
 		private Transform interior;
@@ -74,6 +79,15 @@ namespace HalfGripStereo
 		private string unitShown;
 		private string visorShown;
 		private readonly List<GameObject> sleeves = new List<GameObject>();
+		private readonly List<InteriorCollider> sleeveTargets = new List<InteriorCollider>();
+		/// <summary>The sleeve the hand hovers, whose disc is drawn popped out, or -1.</summary>
+		private int hoveredSleeve = -1;
+		/// <summary>The cockpit hand, and the knobs' click targets (what the hand must hover for the mouse wheel to turn them).</summary>
+		private Grabber hand;
+		private InteriorCollider volumeTarget;
+		private InteriorCollider seekTarget;
+		/// <summary>The steering wheel's grab area, in the cockpit's units, for the log.</summary>
+		private float wheelReach;
 		private readonly List<Loose> loose = new List<Loose>();
 
 		/// <summary>A disc out of its sleeve and what it is drawn with.</summary>
@@ -133,7 +147,8 @@ namespace HalfGripStereo
 		}
 
 		/// <summary>The settings the stereo was last built from.</summary>
-		private static string Settings() => string.Join("|", Mod.UnitX.Value, Mod.UnitY.Value, Mod.Lean.Value, Mod.VisorX.Value, Mod.VisorY.Value, Mod.ShowVisor.Value, Mod.LitParts.Value);
+		/// <remarks>The game's grab tolerance (its settings) widens the wheel's grab area, which the right knob is kept out of, so it is one of them.</remarks>
+		private static string Settings() => string.Join("|", Mod.UnitX.Value, Mod.UnitY.Value, Mod.Lean.Value, Mod.VisorX.Value, Mod.VisorY.Value, Mod.ShowVisor.Value, Mod.LitParts.Value, Grabber.GrabTolerance);
 
 		/// <summary>
 		/// The cockpit's pixel size in its own units: the middle value over every sprite showing in it (one sprite is not enough: some are
@@ -221,6 +236,19 @@ namespace HalfGripStereo
 			}
 			Materials(wheel);
 			toward = Toward(cam);
+			hand = FindFirstObjectByType<Grabber>();
+			// Where the hand takes the wheel: its circle collider, widened by its hit box times the game's grab tolerance (as the Grabber
+			// tests it). The wheel's collider wins over the stereo's (its sorting is higher), so the right knob must be outside it.
+			Vector2 reachAt = new Vector2(centre.x, centre.y);
+			wheelReach = 0f;
+			InteriorCircleCollider grip = wheel != null ? wheel.GetComponentInParent<NSteeringWheel>()?.GetComponent<InteriorCircleCollider>() : null;
+			if (grip != null)
+			{
+				float scale = Mathf.Abs(grip.transform.lossyScale.x) / Mathf.Max(1e-6f, Mathf.Abs(interior.lossyScale.x));
+				wheelReach = (grip.radius + Mathf.Max(0f, grip.hitBoxExpand) * Grabber.GrabTolerance) * scale;
+				Vector3 g = interior.InverseTransformPoint(grip.transform.position);
+				reachAt = new Vector2(g.x, g.y);
+			}
 
 			// The head unit: its right edge a little clear of the rim, its middle a little above the wheel's. Square on, its sides leaning
 			// toward the cockpit camera's vanishing point (the point straight ahead of the camera, in the wheel's plane; see Face).
@@ -231,7 +259,9 @@ namespace HalfGripStereo
 			for (int pass = 0; pass < 2; pass++)
 			{
 				// Twice: the face's width (from the right side's lean) sets where its left end is, which sets the lean.
-				corner = new Vector3(centre.x - radius - WheelGap - face.W * texel + Mod.UnitX.Value, centre.y + 0.5f - h * 0.5f * texel + Mod.UnitY.Value, centre.z);
+				corner = new Vector3(centre.x - radius - WheelGap - face.W * texel, centre.y + 0.5f - h * 0.5f * texel + Mod.UnitY.Value, centre.z);
+				corner.x -= KnobOverlap(corner, reachAt, wheelReach);
+				corner.x += Mod.UnitX.Value;
 				face = new Face(Vanish(corner), Mod.Lean.Value);
 			}
 			Vector3 unitAt = corner + new Vector3(0f, face.Low * texel, 0f);
@@ -247,19 +277,11 @@ namespace HalfGripStereo
 			lcdShown = null;
 			Sprite(unit, "Display", lcdTexture, new Vector3(lx * texel, ly * texel, toward * Lift), unlit, 1);
 
-			// Behind the keys, the whole unit: a right click anywhere on it ejects.
-			Touch(unit, "Unit", new Vector3(w * 0.5f, face.Rows * 0.5f, 0f) * texel, w * texel, face.Rows * texel, StereoButton.SortingLayer - 1, null, Eject);
-			foreach (Art.Part p in Art.Parts)
-			{
-				Rect r = face.Target(p);
-				Art.Part part = p;
-				if (p == Art.Part.Knob)
-				{
-					Knob(r);
-					continue;
-				}
-				Touch(unit, p.ToString(), new Vector3(r.center.x, r.center.y, 0f) * texel, r.width * texel, r.height * texel, StereoButton.SortingLayer, () => Press(part), Eject);
-			}
+			// The knobs: click targets (the hand clicks a Clickable it hovers; a Grabbable would be grabbed instead), turned by the mouse
+			// wheel in Update. Nothing else on the unit takes the hand: no right click on it (the owner's wish).
+			Rect vr = face.Target(Art.Part.Volume), sr = face.Target(Art.Part.Seek);
+			volumeTarget = Touch(unit, "Volume", new Vector3(vr.center.x, vr.center.y, 0f) * texel, vr.width * texel, vr.height * texel, StereoButton.SortingLayer, () => Click(Art.Part.Volume));
+			seekTarget = Touch(unit, "Seek", new Vector3(sr.center.x, sr.center.y, 0f) * texel, sr.width * texel, sr.height * texel, StereoButton.SortingLayer, () => Click(Art.Part.Seek));
 			unitShown = null;
 			DrawUnit();
 
@@ -276,7 +298,7 @@ namespace HalfGripStereo
 			{
 				sticking = -1;
 			}
-			Mod.Info("Stereo: head unit at " + unitAt.ToString("0.00") + " (" + (w * texel).ToString("0.00") + " units wide, " + face.Rows + " px tall, vanishing point " + Vanish(corner).ToString("0") + " px from its corner, sides leaning " + Mod.Lean.Value.ToString("0.0") + " px), wheel at " + centre.ToString("0.00") + " radius " + radius.ToString("0.00") + ", sorting " + sortingLayer + "/" + sortingOrder + ", hand sorting " + HandSorting() + ", lit '" + (lit != null ? lit.shader.name : "none") + "', display '" + (unlit != null ? unlit.shader.name : "none") + "', camera '" + (cam != null ? cam.name : "none") + "' toward " + toward);
+			Mod.Info("Stereo: head unit at " + unitAt.ToString("0.00") + " (" + (w * texel).ToString("0.00") + " units wide, " + face.Rows + " px tall, vanishing point " + Vanish(corner).ToString("0") + " px from its corner, sides leaning " + Mod.Lean.Value.ToString("0.0") + " px), wheel at " + centre.ToString("0.00") + " radius " + radius.ToString("0.00") + ", wheel's grab area " + wheelReach.ToString("0.00") + " (grab tolerance " + Grabber.GrabTolerance.ToString("0.00") + "), right knob's nearest point " + KnobDistance(corner, reachAt).ToString("0.00") + " from it, sorting " + sortingLayer + "/" + sortingOrder + ", hand sorting " + HandSorting() + ", lit '" + (lit != null ? lit.shader.name : "none") + "', display '" + (unlit != null ? unlit.shader.name : "none") + "', camera '" + (cam != null ? cam.name : "none") + "' toward " + toward);
 		}
 
 		/// <summary>
@@ -320,32 +342,42 @@ namespace HalfGripStereo
 			return lo > hi ? "?" : lo + ".." + hi;
 		}
 
-		/// <summary>The volume knob: grabbed and turned round its middle (see <see cref="KnobGrab"/>); each step clicks.</summary>
-		private void Knob(Rect r)
+		/// <summary>The right knob's box in the cockpit's units, the face's bottom left at <paramref name="corner"/>.</summary>
+		private Rect SeekBox(Vector3 corner)
 		{
-			GameObject go = new GameObject("Knob");
-			go.layer = layer;
-			go.transform.SetParent(unit.transform, false);
-			go.transform.localPosition = new Vector3(r.center.x * texel, r.center.y * texel, toward * TouchLift);
-			InteriorSquareCollider target = go.AddComponent<InteriorSquareCollider>();
-			target.width = r.width * texel;
-			target.height = r.height * texel;
-			target.hitBoxExpand = 0f;
-			target.localNormalPlane = Vector3.forward;
-			target.sortingLayer = StereoButton.SortingLayer;
-			KnobGrab knob = go.AddComponent<KnobGrab>();
-			knob.attachedCollider = target;
-			knob.keepPhysicalCursorClose = true;
-			knob.keepPhysicalCursorRange = Mathf.Max(r.width, r.height) * texel;
-			knob.Read = () => deck != null ? deck.VolumeTurn : 0.7f;
-			knob.Turned = t =>
+			Rect r = face.Target(Art.Part.Seek);
+			return new Rect(corner.x + r.xMin * texel, corner.y + r.yMin * texel, r.width * texel, r.height * texel);
+		}
+
+		/// <summary>How far the right knob's box is from <paramref name="at"/> (its nearest point).</summary>
+		private float KnobDistance(Vector3 corner, Vector2 at)
+		{
+			Rect k = SeekBox(corner);
+			float dx = Mathf.Max(0f, Mathf.Max(k.xMin - at.x, at.x - k.xMax));
+			float dy = Mathf.Max(0f, Mathf.Max(k.yMin - at.y, at.y - k.yMax));
+			return Mathf.Sqrt(dx * dx + dy * dy);
+		}
+
+		/// <summary>
+		/// How far left the unit must go for its right knob's box to clear the steering wheel's grab area (the circle of
+		/// <paramref name="reach"/> round <paramref name="at"/>) by <see cref="WheelGap"/>; 0 if it already does. Before 0.3.0 the unit
+		/// stood clear of the wheel's sprite only, and the wheel took the hand from the unit's right side (the owner found).
+		/// </summary>
+		private float KnobOverlap(Vector3 corner, Vector2 at, float reach)
+		{
+			if (reach <= 0f)
 			{
-				if (deck != null && deck.SetVolume(Mathf.RoundToInt(t * Mod.VolumeSteps)))
-				{
-					Sounds.Tick(gameObject);
-				}
-			};
-			knob.RightClicked = Eject;
+				return 0f;
+			}
+			Rect k = SeekBox(corner);
+			float need = reach + WheelGap;
+			float dy = Mathf.Max(0f, Mathf.Max(k.yMin - at.y, at.y - k.yMax));
+			if (dy >= need)
+			{
+				return 0f;
+			}
+			float right = at.x - Mathf.Sqrt(need * need - dy * dy);
+			return Mathf.Max(0f, k.xMax - right);
 		}
 
 		private void BuildVisor(Vector3 wheelCentre)
@@ -372,9 +404,12 @@ namespace HalfGripStereo
 			visor = Part("StereoVisor", transform, corner);
 			Vector3 inUnit = corner - unit.transform.localPosition;
 			visorBox = new Rect(inUnit.x, inUnit.y, vw * texel, vh * texel);
-			visorTexture = MakeTexture(vw, vh, "StereoVisor");
+			// The picture is wider than the visor (Art.Spill, clear) so a popped last disc shows whole; placing and dropping use the visor's own width.
+			visorTexture = MakeTexture(Art.VisorCanvasWidth(n), vh, "StereoVisor");
 			Sprite(visor, "Wallet", visorTexture, Vector3.zero, lit, 0);
 			sleeves.Clear();
+			sleeveTargets.Clear();
+			hoveredSleeve = -1;
 			for (int i = 0; i < n; i++)
 			{
 				sleeves.Add(Sleeve(i));
@@ -387,7 +422,7 @@ namespace HalfGripStereo
 		/// <summary>Disc <paramref name="i"/>'s sleeve: grabbing it takes the disc out into the hand.</summary>
 		private GameObject Sleeve(int i)
 		{
-			RectInt box = Art.PocketPlace(i);
+			RectInt box = Art.HoverPlace(i);
 			GameObject go = new GameObject("Sleeve" + (i + 1));
 			go.layer = layer;
 			go.transform.SetParent(visor.transform, false);
@@ -398,6 +433,7 @@ namespace HalfGripStereo
 			target.hitBoxExpand = 0f;
 			target.localNormalPlane = Vector3.forward;
 			target.sortingLayer = StereoButton.SortingLayer;
+			sleeveTargets.Add(target);
 			SleeveGrab sleeve = go.AddComponent<SleeveGrab>();
 			sleeve.attachedCollider = target;
 			int index = i;
@@ -532,7 +568,7 @@ namespace HalfGripStereo
 		}
 
 		/// <summary>A click target of the given size centred on <paramref name="local"/>, in front of it.</summary>
-		private void Touch(GameObject on, string name, Vector3 local, float width, float height, int priority, Action left, Action right)
+		private InteriorCollider Touch(GameObject on, string name, Vector3 local, float width, float height, int priority, Action left)
 		{
 			GameObject go = new GameObject("Touch" + name);
 			go.layer = layer;
@@ -547,14 +583,14 @@ namespace HalfGripStereo
 			StereoButton button = go.AddComponent<StereoButton>();
 			button.attachedCollider = target;
 			button.Left = left;
-			button.Right = right;
+			return target;
 		}
 
 		// ---------------------------------------------------------------------------------------------------------------------------
-		// The hand on the keys.
+		// The hand on the knobs.
 
-		/// <summary>A key pressed (left click): power, previous, play / pause, next, eject.</summary>
-		private void Press(Art.Part part)
+		/// <summary>A knob clicked: the left one pauses or plays, the right one ejects.</summary>
+		private void Click(Art.Part part)
 		{
 			if (deck == null)
 			{
@@ -563,14 +599,48 @@ namespace HalfGripStereo
 			pressed = part;
 			pressedAt = Time.unscaledTime;
 			Sounds.Click(gameObject);
-			switch (part)
+			if (part == Art.Part.Volume)
 			{
-				case Art.Part.Power: deck.TogglePower(); break;
-				case Art.Part.Prev: deck.Skip(-1); break;
-				case Art.Part.Next: deck.Skip(1); break;
-				case Art.Part.Play: deck.TogglePause(); break;
-				case Art.Part.Eject: Eject(); break;
+				deck.TogglePause();
 			}
+			else
+			{
+				Eject();
+			}
+		}
+
+		/// <summary>
+		/// The mouse wheel over a knob turns it, a step per frame the wheel moves (as the game's own carousel reads it): up is louder, or
+		/// the next disc (the next song on MY); down the other way. Only while the hand hovers the knob, so it is free for anything else.
+		/// </summary>
+		private void Scroll()
+		{
+			if (deck == null || hand == null || InteriorMath.Paused)
+			{
+				return;
+			}
+			InteriorCollider over = hand.Hovered;
+			if (over == null || (over != volumeTarget && over != seekTarget))
+			{
+				return;
+			}
+			float y = GameInput.mouseScrollDelta.y;
+			if (Mathf.Abs(y) <= 0.01f)
+			{
+				return;
+			}
+			int step = y > 0f ? 1 : -1;
+			if (over == volumeTarget)
+			{
+				if (deck.SetVolume(Mod.Volume.Value + step))
+				{
+					Sounds.Tick(gameObject);
+				}
+				return;
+			}
+			seekNotches += step;
+			Sounds.Tick(gameObject);
+			deck.Skip(step);
 		}
 
 		/// <summary>The disc in the stereo comes half out of the slot, for the hand to take.</summary>
@@ -580,8 +650,6 @@ namespace HalfGripStereo
 			{
 				return;
 			}
-			pressed = Art.Part.Eject;
-			pressedAt = Time.unscaledTime;
 			int i = deck.DiscIndex;
 			if (i < 0)
 			{
@@ -623,7 +691,7 @@ namespace HalfGripStereo
 			l.Target = l.Touch.AddComponent<InteriorSquareCollider>();
 			l.Target.width = l.Target.height = Art.DiscSize * texel;
 			l.Target.localNormalPlane = Vector3.forward;
-			// Above the stereo's keys, so a disc sticking out of the slot is what the hand takes there.
+			// Above the stereo's knobs, so a disc sticking out of the slot is what the hand takes there.
 			l.Target.sortingLayer = StereoButton.SortingLayer + 1;
 			l.Grab = go.AddComponent<DiscGrab>();
 			l.Grab.attachedCollider = l.Target;
@@ -777,7 +845,7 @@ namespace HalfGripStereo
 				l.Texture.SetPixels32(c.Px);
 				l.Texture.Apply(false);
 			}
-			// The target over the part above the slot only (the keys under it stay reachable); none while it slides.
+			// The target over the part above the slot only (the display under it stays clear); none while it slides.
 			bool still = l.Grab.State != DiscGrab.Mode.Slot || (!l.Inserting && Mathf.Approximately(l.Row, l.RowTo));
 			l.Target.enabled = still && shows > 2;
 			l.Target.height = Mathf.Max(1, shows) * texel;
@@ -891,6 +959,7 @@ namespace HalfGripStereo
 					pressed = null;
 				}
 				StepLoose();
+				Scroll();
 				DrawUnit();
 				DrawVisor();
 				DrawLcd();
@@ -904,15 +973,14 @@ namespace HalfGripStereo
 
 		private void DrawUnit()
 		{
-			bool power = deck == null || deck.Power;
 			float turn = deck != null ? deck.VolumeTurn : 0.7f;
-			string key = pressed + "|" + power + "|" + turn;
+			string key = pressed + "|" + turn + "|" + seekNotches;
 			if (key == unitShown)
 			{
 				return;
 			}
 			unitShown = key;
-			unitTexture.SetPixels32(face.Casing(pressed, power, turn).Px);
+			unitTexture.SetPixels32(face.Casing(pressed, turn, seekNotches).Px);
 			unitTexture.Apply(false);
 		}
 
@@ -922,7 +990,11 @@ namespace HalfGripStereo
 			{
 				return;
 			}
-			string key = Discs.All.Count + "|";
+			// The sleeve the hand hovers: its disc stands out (none while the hand holds something: the Grabber hovers nothing then).
+			InteriorCollider over = hand != null ? hand.Hovered : null;
+			hoveredSleeve = over != null ? sleeveTargets.IndexOf(over) : -1;
+			int pop = Mathf.Clamp(Mod.PopOut.Value, 0, Art.MaxPop);
+			string key = Discs.All.Count + "|" + hoveredSleeve + "|" + pop + "|";
 			for (int i = 0; i < Discs.All.Count; i++)
 			{
 				key += IsOut(i) ? "o" : "i";
@@ -937,24 +1009,24 @@ namespace HalfGripStereo
 			{
 				Disc d = Discs.All[i];
 				bool gone = IsOut(i);
-				looks.Add(new Art.DiscLook { Label = Art.LabelFor(d.Mix ? "MIX" : d.Title), Mark = d.Mix ? "MY" : null, Out = gone });
+				looks.Add(new Art.DiscLook { Label = Art.LabelFor(d.Mix ? "MIX" : d.Title), Mark = d.Mix ? "MY" : null, Out = gone, Hovered = i == hoveredSleeve && !gone });
 				if (i < sleeves.Count && sleeves[i] != null)
 				{
 					sleeves[i].SetActive(!gone);
 				}
 			}
-			visorTexture.SetPixels32(Art.VisorWallet(looks).Px);
+			visorTexture.SetPixels32(Art.VisorWallet(looks, pop).Px);
 			visorTexture.Apply(false);
 		}
 
 		private void DrawLcd()
 		{
 			string top = "", bottom = "";
-			bool on = deck != null && deck.Power;
+			bool on = deck != null;
 			if (on)
 			{
 				deck.Lines(out top, out bottom);
-				bottom = Scroll(bottom ?? "");
+				bottom = Marquee(bottom ?? "");
 			}
 			string key = on + "|" + top + "|" + bottom;
 			if (key == lcdShown)
@@ -967,7 +1039,7 @@ namespace HalfGripStereo
 		}
 
 		/// <summary>A name too long for the display runs along it, with a gap before it comes round again.</summary>
-		private string Scroll(string text)
+		private string Marquee(string text)
 		{
 			int cols = face.DisplayColumns;
 			if (text.Length <= cols)
@@ -998,6 +1070,8 @@ namespace HalfGripStereo
 			}
 			owned.Clear();
 			sleeves.Clear();
+			sleeveTargets.Clear();
+			volumeTarget = seekTarget = null;
 			unit = visor = null;
 			unitTexture = visorTexture = lcdTexture = null;
 		}
@@ -1006,7 +1080,7 @@ namespace HalfGripStereo
 	}
 
 	/// <summary>
-	/// A key as the cockpit hand sees it: the game's own click target (the hand clicks the Clickable over the interior collider it
+	/// A knob as the cockpit hand sees it: the game's own click target (the hand clicks the Clickable over the interior collider it
 	/// hovers, left and right), as the MiniMap's GPS does; HalfGripTools has no interaction API of its own.
 	/// </summary>
 	internal sealed class StereoButton : Clickable
@@ -1018,10 +1092,7 @@ namespace HalfGripStereo
 		internal const int SortingLayer = -100;
 
 		internal Action Left;
-		internal Action Right;
 
 		protected override void OnClick() => Left?.Invoke();
-
-		protected override void OnRightClick() => Right?.Invoke();
 	}
 }

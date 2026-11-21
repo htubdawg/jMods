@@ -10,16 +10,16 @@ namespace HalfGripStereo
 	/// <summary>
 	/// What the stereo plays, and the audio source it plays it on. It lives on the stereo in the cockpit, so it goes with the scene, but
 	/// what it remembers is static, so the stereo carries on from race to race in a session: the disc in it, the track and the place in
-	/// it, power, pause. The volume is saved in the config.
+	/// it, pause. The volume is saved in the config.
 	///
 	/// The game starts its race song when the countdown ends (TrackManager.PlayRaceMusic). With the stereo in the car that call is skipped
 	/// (see <see cref="RaceMusicPatch"/>) and the stereo starts instead; until the player picks a disc it plays the disc of the song the
 	/// game picked, so a stereo left alone sounds like the game. The source goes to the game's Music mixer group, so the Music volume in
 	/// the settings turns it down too; the game's pause menu pauses it with every other sound.
 	///
-	/// A soundtrack disc holds one song and repeats it, as the game does; next and previous change disc. The player's own disc plays the
-	/// songs in their folder one after another (or shuffled), each loaded off the disk when its turn comes, and next and previous change
-	/// song.
+	/// A soundtrack disc holds one song and repeats it, as the game does; next and previous (the right knob) change disc. The player's
+	/// own disc plays the songs in their folder one after another (or shuffled), each loaded off the disk when its turn comes, and goes
+	/// round to its first song after its last; next and previous change song on it, never disc.
 	/// </summary>
 	internal sealed class Deck : MonoBehaviour
 	{
@@ -28,7 +28,6 @@ namespace HalfGripStereo
 		private static int disc = -1;
 		/// <summary>The player chose the disc; until then each race loads the disc of the game's own pick.</summary>
 		private static bool chosen;
-		private static bool power = true;
 		private static bool paused;
 		/// <summary>The track on the player's own disc, and where in the song the stereo was.</summary>
 		private static int track;
@@ -54,7 +53,6 @@ namespace HalfGripStereo
 
 		internal static Deck Active;
 
-		internal bool Power => power;
 		internal bool Paused => paused;
 		internal int DiscIndex => disc;
 		/// <summary>The knob's turn, 0 to 1.</summary>
@@ -189,28 +187,9 @@ namespace HalfGripStereo
 			Stop();
 		}
 
-		internal void TogglePower()
-		{
-			live = true;
-			power = !power;
-			if (power)
-			{
-				Restart();
-			}
-			else
-			{
-				Remember();
-				Stop();
-			}
-		}
-
 		internal void TogglePause()
 		{
 			live = true;
-			if (!power)
-			{
-				return;
-			}
 			paused = !paused;
 			if (paused)
 			{
@@ -231,23 +210,21 @@ namespace HalfGripStereo
 			}
 		}
 
-		/// <summary>Next or previous song on the player's disc, next or previous disc on a soundtrack disc.</summary>
+		/// <summary>
+		/// Next or previous song on the player's disc, next or previous disc on a soundtrack disc. Back more than 3 seconds into a song
+		/// goes to its start first, on every disc, as CD players do (the owner's wish); within the first 3 seconds it goes a song or disc back.
+		/// </summary>
 		internal void Skip(int by)
 		{
 			live = true;
-			if (!power)
+			if (by < 0 && disc >= 0 && source.clip != null && !loading && source.time > 3f)
 			{
+				position = 0f;
+				Restart();
 				return;
 			}
 			if (disc >= 0 && Discs.All[disc].Mix && songs.Count > 0)
 			{
-				// Back within the first 3 seconds goes to the song before; later, to the start of this one, as CD players do.
-				if (by < 0 && source.clip != null && source.time > 3f)
-				{
-					position = 0f;
-					Restart();
-					return;
-				}
 				track = ((track + by) % songs.Count + songs.Count) % songs.Count;
 				position = 0f;
 				failures = 0;
@@ -305,7 +282,7 @@ namespace HalfGripStereo
 		{
 			Stop();
 			trouble = null;
-			if (!power || paused || !live || disc < 0 || disc >= Discs.All.Count)
+			if (paused || !live || disc < 0 || disc >= Discs.All.Count)
 			{
 				return;
 			}
@@ -463,7 +440,7 @@ namespace HalfGripStereo
 			if (deviceChanged && !InteriorMath.Paused && Time.timeScale > 0f)
 			{
 				deviceChanged = false;
-				if (source.clip != null && !source.isPlaying && !loading && power && !paused)
+				if (source.clip != null && !source.isPlaying && !loading && !paused)
 				{
 					Mod.Info("Stereo: the sound device changed; the song goes on from " + position.ToString("0.0") + " s");
 					Restart();
@@ -475,7 +452,7 @@ namespace HalfGripStereo
 				position = source.time;
 			}
 			// A song on the player's disc has ended (not paused by the game's menu, which pauses every source): on to the next.
-			if (source.clip != null && !source.loop && !source.isPlaying && !loading && power && !paused && !InteriorMath.Paused && Time.timeScale > 0f
+			if (source.clip != null && !source.loop && !source.isPlaying && !loading && !paused && !InteriorMath.Paused && Time.timeScale > 0f
 				&& (source.timeSamples == 0 || source.time >= source.clip.length - 0.1f))
 			{
 				if (disc >= 0 && Discs.All[disc].Mix && songs.Count > 0)

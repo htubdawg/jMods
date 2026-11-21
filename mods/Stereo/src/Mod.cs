@@ -30,12 +30,13 @@ namespace HalfGripStereo
 		internal static ConfigEntry<bool> ShowVisor;
 		internal static ConfigEntry<float> VisorX;
 		internal static ConfigEntry<float> VisorY;
+		internal static ConfigEntry<int> PopOut;
 		internal static ConfigEntry<bool> LitParts;
 		internal static ConfigEntry<bool> Verbose;
 		internal static ConfigEntry<int> ConfigVersion;
 
 		/// <summary>The config's layout now; <see cref="Migrate"/> brings an older file up to it once.</summary>
-		private const int CurrentConfig = 2;
+		private const int CurrentConfig = 3;
 
 		/// <summary>A detail line for the log, only written with Debug.VerboseLog on. Warnings and errors are always written.</summary>
 		internal static void Info(string text)
@@ -91,6 +92,11 @@ namespace HalfGripStereo
 			{
 				return;
 			}
+			// 3 (0.3.0): Stereo.OffsetX 0 -> 0.4 (the owner's new default, the unit having moved left of the wheel's grab area).
+			if (ConfigVersion.Value < 3 && Mathf.Approximately(UnitX.Value, 0f))
+			{
+				UnitX.Value = 0.4f;
+			}
 			ConfigVersion.Value = CurrentConfig;
 		}
 
@@ -98,16 +104,17 @@ namespace HalfGripStereo
 		{
 			Log = ctx.Log;
 			Enabled = ctx.Config.Bind("Stereo", "Enabled", true, "Put the stereo in the car. Off, the game plays its own race music as usual (from the next race on).");
-			MusicFolder = ctx.Config.Bind("Music", "Folder", "", "The folder the MY MUSIC disc plays (.ogg, .mp3, .wav, .aiff; not its subfolders), in file name order. Empty: \"Half Grip\" in your Music folder, made the first time the stereo needs it.");
+			MusicFolder = ctx.Config.Bind("Music", "Folder", "", "The folder the MY MUSIC disc plays (.ogg, .mp3, .wav, .aiff; not its subfolders), in file name order. Empty: \"Half Grip\" in your Music folder. The folder is made when the game starts if it is not there.");
 			Shuffle = ctx.Config.Bind("Music", "Shuffle", false, "Play the MY MUSIC disc's songs in a random order.");
-			Volume = ctx.Config.Bind("Music", "Volume", 7, new ConfigDescription("The stereo's volume knob, 0 to 10 (grab it with the hand in the cockpit and turn it: clockwise is louder). The game's Music volume applies on top.", new AcceptableValueRange<int>(0, VolumeSteps)));
+			Volume = ctx.Config.Bind("Music", "Volume", 7, new ConfigDescription("The stereo's volume knob, 0 to 10 (point the cockpit hand at the stereo's left knob and turn the mouse wheel: up is louder). The game's Music volume applies on top.", new AcceptableValueRange<int>(0, VolumeSteps)));
 			Loudness = ctx.Config.Bind("Music", "Loudness", 1f, new ConfigDescription("How loud the stereo is at full volume against the game's own music (1: as loud).", new AcceptableValueRange<float>(0.1f, 1f)));
-			UnitX = ctx.Config.Bind("Stereo", "OffsetX", 0f, "Moves the stereo sideways from its place left of the steering wheel (cockpit units, right is positive; a cockpit pixel is about 0.05). Takes effect as soon as the file is saved.");
+			UnitX = ctx.Config.Bind("Stereo", "OffsetX", 0.4f, "Moves the stereo sideways from its place left of the steering wheel (cockpit units, right is positive; a cockpit pixel is about 0.05). Takes effect as soon as the file is saved.");
 			UnitY = ctx.Config.Bind("Stereo", "OffsetY", 0f, "Moves the stereo up or down (cockpit units, up is positive). Takes effect as soon as the file is saved.");
 			Lean = ctx.Config.Bind("Stereo", "Lean", 3f, new ConfigDescription("How far the stereo's left side leans to the right over its height, in cockpit pixels: its sides run up toward the middle of the view, as the dash's do (the right side leans less). The face itself stays square on. 0: a plain rectangle. Takes effect as soon as the file is saved.", new AcceptableValueRange<float>(0f, 12f)));
-			ShowVisor = ctx.Config.Bind("Visor", "Shown", true, "Show the CD wallet on the sun visor. Off, the stereo's next and previous keys still change disc.");
+			ShowVisor = ctx.Config.Bind("Visor", "Shown", true, "Show the CD wallet on the sun visor. Off, the stereo's right knob still changes disc.");
 			VisorX = ctx.Config.Bind("Visor", "ScreenX", 0.3f, new ConfigDescription("Where the CD wallet's middle is across the screen (0 left edge, 1 right edge). Takes effect as soon as the file is saved.", new AcceptableValueRange<float>(0f, 1f)));
 			VisorY = ctx.Config.Bind("Visor", "ScreenY", 0.87f, new ConfigDescription("Where the CD wallet's middle is up the screen (0 bottom, 1 top). Takes effect as soon as the file is saved.", new AcceptableValueRange<float>(0f, 1f)));
+			PopOut = ctx.Config.Bind("Visor", "PopOut", 12, new ConfigDescription("How far the disc under the hand comes out of its sleeve in the CD wallet, to the right, in cockpit pixels (0: it doesn't). Takes effect as soon as the file is saved.", new AcceptableValueRange<int>(0, Art.MaxPop)));
 			LitParts = ctx.Config.Bind("Display", "Lit", true, "Light the stereo and the visor like the rest of the cockpit. Turn it off if they do not show.");
 			Verbose = ctx.Config.Bind("Debug", "VerboseLog", false, "Write what the stereo finds and does (songs, placing, discs) to the BepInEx log.");
 			ConfigVersion = ctx.Config.Bind("Debug", "ConfigVersion", 0, "The settings' layout, for moving old values on once. Leave it alone.");
@@ -119,6 +126,8 @@ namespace HalfGripStereo
 			ctx.OnSceneLoaded(Sounds.OnSceneLoaded);
 			Discs.Find();
 			Sounds.Find();
+			// The player's own folder, made now so it is there to fill before MY is ever played.
+			Discs.Folder();
 
 			fitter = new GameObject("StereoFitter");
 			UnityEngine.Object.DontDestroyOnLoad(fitter);

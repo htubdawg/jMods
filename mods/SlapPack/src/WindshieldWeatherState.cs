@@ -46,9 +46,7 @@ namespace HalfGripSlapPack
 					{
 						float dx = p.X - blades[i].Pivot.X, dy = p.Y - blades[i].Pivot.Y;
 						double radius = Math.Sqrt(dx * dx + dy * dy);
-						angles[i][k] = radius >= blades[i].Radius * 0.35 && radius <= blades[i].Radius
-							? (float)((Math.Atan2(dy, dx) * 180 / Math.PI - WiperGeometry.ParkDegrees) / WiperGeometry.TravelDegrees)
-							: -10;
+						angles[i][k] = blades[i].SweepAt(p, out float sweep) ? sweep : -10;
 						margins[i][k] = (float)(Math.Atan2(SpanX * 0.01125, Math.Max(radius, 0.001)) * 180 / Math.PI / WiperGeometry.TravelDegrees);
 					}
 				}

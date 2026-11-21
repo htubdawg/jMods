@@ -10,6 +10,7 @@ namespace HalfGripSlapPack
         private MeshRenderer[] settings;
         private TurnSignalAudio detentAudio;
         private readonly WiperKnobRotation knob = new WiperKnobRotation();
+        private readonly WiperScrollDetents scroll = new WiperScrollDetents();
         private Vector2 previousKnobHand;
         internal bool RotatingKnob { get; private set; }
         private float startAngle, startPull;
@@ -37,6 +38,26 @@ namespace HalfGripSlapPack
             if (!enabled && CanInteract && hand.Held != this) enabled = true;
             canBeGrabbed = CanInteract;
             if (IsGrabbed && !CanInteract) CancelHold();
+            CheckScroll();
+        }
+
+        /// <summary>
+        /// Mouse speed control: hover the free hand over the stalk and scroll. The right-button
+        /// drag through detents (see <see cref="OnRightClick"/>) remains for everyone, including controllers.
+        /// </summary>
+        private void CheckScroll()
+        {
+            if (!CanInteract || hand.Held || !hand.Hovered || hand.Hovered.GetComponentInParent<WiperStalk>() != this)
+            {
+                scroll.Reset();
+                return;
+            }
+            WiperSpeed previous = state.Speed;
+            WiperSpeed next = scroll.Scroll(previous, GameInput.mouseScrollDelta.y);
+            if (next == previous) return;
+            state.SetSpeed(next);
+            if (detentAudio != null) detentAudio.Click(0.25f);
+            RefreshPose();
         }
 
         protected override void OnGrab()

@@ -17,7 +17,7 @@ namespace HalfGripStereo
 	/// </summary>
 	internal sealed class Face
 	{
-		/// <summary>The canvas's width in cockpit pixels (the flat 64 and the right side's lean), and its height.</summary>
+		/// <summary>The canvas's width in cockpit pixels (the flat 74 and the right side's lean), and its height.</summary>
 		internal readonly int W;
 		internal readonly int Rows;
 		/// <summary>The canvas's bottom row against the face's bottom left corner: always 0 (the face does not dip).</summary>
@@ -106,55 +106,45 @@ namespace HalfGripStereo
 		private static readonly Color32 KnobFace = new Color32(58, 58, 64, 255);
 		private static readonly Color32 KnobDark = new Color32(30, 30, 34, 255);
 		private static readonly Color32 KnobMark = new Color32(220, 220, 220, 255);
-		private static readonly Color32 Key = new Color32(64, 64, 70, 255);
-		private static readonly Color32 KeyTop = new Color32(98, 98, 106, 255);
-		private static readonly Color32 KeyLow = new Color32(22, 22, 26, 255);
-		private static readonly Color32 KeyPressed = new Color32(44, 44, 49, 255);
-		private static readonly Color32 KeySign = new Color32(190, 190, 198, 255);
-		private static readonly Color32 LedOn = new Color32(236, 52, 36, 255);
-		private static readonly Color32 LedOff = new Color32(72, 22, 20, 255);
 		private static readonly Color32 Badge = new Color32(176, 150, 96, 255);
 		private static readonly Color32 Window = new Color32(20, 12, 6, 255);
 
 		/// <summary>The display frame's flat box (round the window), and the window's.</summary>
 		private static readonly Rect Frame = new Rect(19, 8, 36, 14);
 
-		/// <summary>The knob's middle and radius on the flat art.</summary>
-		private static readonly Vector2 KnobAt = new Vector2(10.5f, 12.5f);
+		/// <summary>A knob's middle on the flat art (the middle of its box), and its radius.</summary>
+		private static Vector2 KnobAt(Art.Part p)
+		{
+			RectInt r = Art.Place(p);
+			return new Vector2(r.x + (r.width - 1) * 0.5f + 0.5f, r.y + (r.height - 1) * 0.5f + 0.5f);
+		}
+
 		private const float KnobRadius = 7.4f;
 		/// <summary>The knob is narrower across than up (the owner's mock-up), which also keeps it clear of the leaning left side.</summary>
 		private const float KnobNarrow = 0.82f;
 
-		/// <summary>The knob's middle on the canvas and its radii (narrow across, the face being turned away).</summary>
-		internal void Knob(out Vector2 centre, out float rx, out float ry)
+		/// <summary>A knob's middle on the canvas and its radii (narrow across, the face being turned away).</summary>
+		internal void Knob(Art.Part p, out Vector2 centre, out float rx, out float ry)
 		{
-			centre = Map(KnobAt.x, KnobAt.y);
+			Vector2 at = KnobAt(p);
+			centre = Map(at.x, at.y);
 			rx = KnobRadius * KnobNarrow;
 			ry = KnobRadius;
 		}
 
-		/// <summary>The middle of a part on the canvas and the size of its box, for its click target.</summary>
+		/// <summary>A knob's box on the canvas, for its click target.</summary>
 		internal Rect Target(Art.Part p)
 		{
-			if (p == Art.Part.Knob)
-			{
-				Knob(out Vector2 c, out float rx, out float ry);
-				return new Rect(c.x - rx - 1f, c.y - ry - 1f, 2f * rx + 2f, 2f * ry + 2f);
-			}
-			RectInt r = Art.Place(p);
-			Columns(r.x, r.xMax, out int x0, out int x1);
-			float lo = float.MaxValue, hi = float.MinValue;
-			for (int x = x0; x <= x1; x++)
-			{
-				Span(x, r.y, r.yMax, 0, out int y0, out int y1);
-				lo = Mathf.Min(lo, y0);
-				hi = Mathf.Max(hi, y1 + 1);
-			}
-			return new Rect(x0, lo, x1 - x0 + 1, hi - lo);
+			Knob(p, out Vector2 c, out float rx, out float ry);
+			return new Rect(c.x - rx - 1f, c.y - ry - 1f, 2f * rx + 2f, 2f * ry + 2f);
 		}
 
-		/// <summary>The head unit's casing on this face (the display is its own sprite, see <see cref="Display"/>).</summary>
-		internal Art.Canvas Casing(Art.Part? pressed, bool power, float knobTurn)
+		/// <summary>
+		/// The head unit's casing on this face (the display is its own sprite, see <see cref="Display"/>): <paramref name="pressed"/> is
+		/// the knob drawn pushed in (clicked), <paramref name="volumeTurn"/> (0 to 1) turns the volume knob's mark from 7 o'clock to 5
+		/// o'clock, <paramref name="seekNotches"/> turns the seek knob's a twelfth of a turn per notch (it turns round and round).
+		/// </summary>
+		internal Art.Canvas Casing(Art.Part? pressed, float volumeTurn, int seekNotches)
 		{
 			Art.Canvas c = new Art.Canvas(W, Rows);
 			int h = Art.UnitHeight;
@@ -212,15 +202,23 @@ namespace HalfGripStereo
 				}
 			}
 
-			// The keys under the display and the eject key by the slot: raised blocks, or pushed in, with their signs upright on them.
-			foreach (Art.Part p in new[] { Art.Part.Power, Art.Part.Prev, Art.Part.Play, Art.Part.Next, Art.Part.Eject })
-			{
-				DrawKey(c, p, pressed == p, power);
-			}
+			// The two knobs; the seek knob's mark starts at 12 o'clock and goes clockwise for next.
+			DrawKnob(c, Art.Part.Volume, pressed == Art.Part.Volume, Mathf.Lerp(Mathf.PI * 1.25f, -Mathf.PI * 0.25f, Mathf.Clamp01(volumeTurn)));
+			DrawKnob(c, Art.Part.Seek, pressed == Art.Part.Seek, Mathf.PI * 0.5f - seekNotches * Mathf.PI / 6f);
 
-			// The volume knob, an ellipse: a chrome rim, a dark groove, a knurled face, the mark turned with the volume, ticks round it.
-			Knob(out Vector2 k, out float rx, out float ry);
-			bool knobIn = pressed == Art.Part.Knob;
+			// The gold CD badge, upright, in the middle under the display, where the keys were.
+			int bx = Mathf.FloorToInt(Art.UnitWidth * 0.5f - 3.5f);
+			Art.Text(c, "CD", bx, Mathf.RoundToInt(Y(bx + 3.5f, 2f)), Badge);
+			return c;
+		}
+
+		/// <summary>
+		/// A knob, an ellipse: a chrome rim, a dark groove, a knurled face, the mark at angle <paramref name="turn"/> (radians, 0 = 3
+		/// o'clock, counter-clockwise), the volume's five ticks round it (on both, the right knob being the left one mirrored).
+		/// </summary>
+		private void DrawKnob(Art.Canvas c, Art.Part p, bool knobIn, float turn)
+		{
+			Knob(p, out Vector2 k, out float rx, out float ry);
 			float sx = rx / KnobRadius, sy = ry / KnobRadius;
 			Oval(c, k.x, k.y, rx, ry, Outline);
 			Oval(c, k.x, k.y, 6.6f * sx, 6.6f * sy, KnobRim);
@@ -232,7 +230,6 @@ namespace HalfGripStereo
 				c.Set(Mathf.FloorToInt(k.x + Mathf.Cos(ang) * 4.6f * sx), Mathf.FloorToInt(k.y + Mathf.Sin(ang) * 4.6f * sy), KnobRim);
 			}
 			Oval(c, k.x - 1.5f * sx, k.y + 1.5f * sy, 1.1f, 1.1f, Art.Shade(KnobFace, 26));
-			float turn = Mathf.Lerp(Mathf.PI * 1.25f, -Mathf.PI * 0.25f, Mathf.Clamp01(knobTurn));
 			for (float r = 1.2f; r <= 4.2f; r += 0.4f)
 			{
 				c.Set(Mathf.FloorToInt(k.x + Mathf.Cos(turn) * r * sx), Mathf.FloorToInt(k.y + Mathf.Sin(turn) * r * sy), KnobMark);
@@ -242,19 +239,6 @@ namespace HalfGripStereo
 				float ang = Mathf.Lerp(Mathf.PI * 1.25f, -Mathf.PI * 0.25f, t / 4f);
 				c.Set(Mathf.FloorToInt(k.x + Mathf.Cos(ang) * 8.4f * sx), Mathf.FloorToInt(k.y + Mathf.Sin(ang) * 8.4f * sy), ChromeDark);
 			}
-
-			// The gold CD badge, upright, at the far end, on a chrome line that follows the face.
-			int bx = fx1 + Mathf.Max(2, (Art.UnitWidth - 1 - fx1 - 7) / 2);
-			if (bx + 7 <= Art.UnitWidth - 1)
-			{
-				int by = Mathf.RoundToInt(Y(bx + 3.5f, 11f));
-				Art.Text(c, "CD", bx, by, Badge);
-				for (int x = bx; x < bx + 7; x++)
-				{
-					c.Set(x, Mathf.FloorToInt(Y(x + 0.5f, 11f)) - 2, ChromeDark);
-				}
-			}
-			return c;
 		}
 
 		/// <summary>The slot's row in column x (flat row 23).</summary>
@@ -273,60 +257,6 @@ namespace HalfGripStereo
 
 		/// <summary>The display window's rows in column x.</summary>
 		internal void WindowRows(int x, out int y0, out int y1) => Span(x, Frame.yMin, Frame.yMax, 2, out y0, out y1);
-
-		private static readonly Dictionary<Art.Part, string> Signs = new Dictionary<Art.Part, string>
-		{
-			// 3x3, rows from the top: power (a ring open at the top), previous, play / pause, next, eject.
-			{ Art.Part.Power, "101101111" }, { Art.Part.Prev, "011111011" }, { Art.Part.Play, "101101101" },
-			{ Art.Part.Next, "110111110" }, { Art.Part.Eject, "010111111" },
-		};
-
-		private void DrawKey(Art.Canvas c, Art.Part p, bool down, bool power)
-		{
-			RectInt r = Art.Place(p);
-			Columns(r.x, r.xMax, out int x0, out int x1);
-			int topMid = 0, lowMid = 0;
-			for (int x = x0; x <= x1; x++)
-			{
-				Span(x, r.y, r.yMax, 0, out int y0, out int y1);
-				c.Rect(x, y0, x, y1, KeyLow);
-				if (down)
-				{
-					if (y1 - 1 > y0)
-					{
-						c.Rect(x, y0, x, y1 - 1, KeyPressed);
-					}
-				}
-				else if (y1 > y0)
-				{
-					c.Rect(x, y0 + 1, x, y1, Key);
-					c.Set(x, y1, KeyTop);
-				}
-				if (x == (x0 + x1) / 2)
-				{
-					topMid = y1;
-					lowMid = y0;
-				}
-			}
-			// The sign, upright, in the key's middle.
-			string s = Signs[p];
-			int sx = (x0 + x1) / 2 - 1, sy = (lowMid + topMid) / 2 - 1 - (down ? 1 : 0);
-			for (int row = 0; row < 3; row++)
-			{
-				for (int col = 0; col < 3; col++)
-				{
-					if (s[row * 3 + col] == '1')
-					{
-						c.Set(sx + col, sy + 2 - row, KeySign);
-					}
-				}
-			}
-			if (p == Art.Part.Power)
-			{
-				Span(x1, r.y, r.yMax, 0, out int _, out int py1);
-				c.Set(x1, py1, power ? LedOn : LedOff);
-			}
-		}
 
 		/// <summary>A filled ellipse round (cx, cy).</summary>
 		internal static void Oval(Art.Canvas c, float cx, float cy, float rx, float ry, Color32 colour)

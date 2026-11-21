@@ -22,6 +22,32 @@ namespace HalfGripSlapPack
         internal void Release() { travel = (int)Setting; }
     }
 
+	/// <summary>
+	/// Mouse-wheel speed selection while the hand hovers the stalk: one detent per wheel notch
+	/// (Unity reports about 1 per notch). Fractional trackpad deltas accumulate, reversing
+	/// direction discards the partial notch, and scrolling past a hard stop is not banked.
+	/// </summary>
+	internal sealed class WiperScrollDetents
+	{
+		private float accumulated;
+
+		/// <summary>Returns the setting after this frame's wheel movement (positive is up, faster).</summary>
+		internal WiperSpeed Scroll(WiperSpeed current, float delta)
+		{
+			if (float.IsNaN(delta) || float.IsInfinity(delta) || delta == 0) return current;
+			if (accumulated != 0 && Math.Sign(delta) != Math.Sign(accumulated)) accumulated = 0;
+			accumulated += delta;
+			int setting = (int)current;
+			while (accumulated >= 1) { accumulated -= 1; setting = Math.Min(3, setting + 1); }
+			while (accumulated <= -1) { accumulated += 1; setting = Math.Max(0, setting - 1); }
+			if ((setting == 3 && accumulated > 0) || (setting == 0 && accumulated < 0)) accumulated = 0;
+			return (WiperSpeed)setting;
+		}
+
+		/// <summary>Forgets a partial notch when the hand leaves the stalk.</summary>
+		internal void Reset() { accumulated = 0; }
+	}
+
     internal static class WasherSpray
     {
         internal static PanePoint Point(PanePoint pivot, float radius, float width, bool driver, int drop, float phase)

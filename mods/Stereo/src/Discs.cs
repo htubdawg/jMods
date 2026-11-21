@@ -225,11 +225,13 @@ namespace HalfGripStereo
 			{ ".aiff", AudioType.AIFF },
 		};
 
-		private static bool folderMade;
+		/// <summary>The folder last made sure of, so a Music.Folder changed with the game running is made too, but each only once.</summary>
+		private static string folderMade;
 
 		/// <summary>
-		/// The folder the player's own disc plays: Music.Folder, or when that is empty "Half Grip" in their Music folder. It is made the
-		/// first time it is asked for if it is not there, so the player finds it.
+		/// The folder the player's own disc plays: Music.Folder, or when that is empty "Half Grip" in their Music folder. It is made if it
+		/// is not there, so the player finds it: the mod asks for it as it loads (the owner's wish: at the first start, not when MY first
+		/// plays), and again whenever the setting names another folder.
 		/// </summary>
 		internal static string Folder()
 		{
@@ -244,9 +246,9 @@ namespace HalfGripStereo
 				folder = Path.Combine(music, "Half Grip");
 			}
 			folder = Environment.ExpandEnvironmentVariables(folder.Trim().Trim('"'));
-			if (!folderMade)
+			if (folderMade != folder)
 			{
-				folderMade = true;
+				folderMade = folder;
 				try
 				{
 					if (!Directory.Exists(folder))

@@ -212,12 +212,14 @@ namespace HalfGripSlapPack
 				for (int i = 0; i < 2; i++)
 				{
 					WiperGeometry g = geometry[i]; float r = g.Radius;
-					// Seven broad, flat shapes: arm, edge, rubber, support, hinge and hub.
-					Rect(vertices[i], 0, g, 0, -w, r * 0.66f, w, c, s, 0.018f);
-					Rect(vertices[i], 1, g, r * 0.05f, w * 0.35f, r * 0.62f, w * 0.7f, c, s, 0.020f);
-					Rect(vertices[i], 2, g, r * 0.35f, -w * 1.25f, r, w * 1.25f, c, s, 0.012f);
-					Rect(vertices[i], 3, g, r * 0.40f, -w * 0.55f, r * 0.95f, w * 0.55f, c, s, 0.016f);
-					Rect(vertices[i], 4, g, r * 0.61f, -w * 1.6f, r * 0.67f, w * 1.6f, c, s, 0.022f);
+					float arm = r * WiperGeometry.ArmLength, outer = r * WiperGeometry.BladeOuter, inner = r * WiperGeometry.BladeInner;
+					// Seven broad, flat shapes: arm and its edge from the pivot to the joint; rubber,
+					// support and hinge in the blade's own frame, which is angled to the arm; and the hub.
+					Rect(vertices[i], 0, g, 0, -w, arm, w, c, s, 0.018f);
+					Rect(vertices[i], 1, g, r * 0.05f, w * 0.35f, arm - r * 0.04f, w * 0.7f, c, s, 0.020f);
+					BladeRect(vertices[i], 2, g, -inner, -w * 1.25f, outer, w * 1.25f, c, s, 0.012f);
+					BladeRect(vertices[i], 3, g, -inner * 0.9f, -w * 0.55f, outer * 0.9f, w * 0.55f, c, s, 0.016f);
+					BladeRect(vertices[i], 4, g, -r * 0.03f, -w * 1.6f, r * 0.03f, w * 1.6f, c, s, 0.022f);
 					Rect(vertices[i], 5, g, -w, -w, w, w, c, s, 0.025f);
 					Rect(vertices[i], 6, g, -w * 1.6f, -w * 1.6f, w * 1.6f, w * 1.6f, c, s, 0.022f);
 					meshes[i].vertices = vertices[i]; meshes[i].RecalculateBounds();
@@ -245,13 +247,29 @@ namespace HalfGripSlapPack
 			spray.vertices = drops; spray.RecalculateBounds();
 		}
 
+		// The tandem blades cross and stack when parked; the passenger blade rides above every
+		// driver-blade part (0.012-0.025) so the opaque quads never share a depth.
+		private const float PassengerLift = 0.014f;
+
 		private void Rect(Vector3[] target, int quad, WiperGeometry g, float x0, float y0, float x1, float y1, float c, float s, float depth)
 		{
+			if (g == geometry[1]) depth += PassengerLift;
 			int i = quad * 4;
 			target[i] = glass.Surface(g.Point(x0, y0, c, s), depth);
 			target[i + 1] = glass.Surface(g.Point(x1, y0, c, s), depth);
 			target[i + 2] = glass.Surface(g.Point(x1, y1, c, s), depth);
 			target[i + 3] = glass.Surface(g.Point(x0, y1, c, s), depth);
+		}
+
+		/// <summary>Like <see cref="Rect"/>, but in the blade's frame (along/across from the arm joint).</summary>
+		private void BladeRect(Vector3[] target, int quad, WiperGeometry g, float u0, float v0, float u1, float v1, float c, float s, float depth)
+		{
+			if (g == geometry[1]) depth += PassengerLift;
+			int i = quad * 4;
+			target[i] = glass.Surface(g.BladePoint(u0, v0, c, s), depth);
+			target[i + 1] = glass.Surface(g.BladePoint(u1, v0, c, s), depth);
+			target[i + 2] = glass.Surface(g.BladePoint(u1, v1, c, s), depth);
+			target[i + 3] = glass.Surface(g.BladePoint(u0, v1, c, s), depth);
 		}
 	}
 }
